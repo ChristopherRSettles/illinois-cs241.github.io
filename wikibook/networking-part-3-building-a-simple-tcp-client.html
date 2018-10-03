@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Networking, Part 3: Building a simple TCP Client</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Networking, Part 3: Building a simple TCP Client
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Networking,-Part-3:-Building-a-simple-TCP-Client">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_socket" href="#socket" class="fancy-link"><code class="highlighter-rouge">socket</code></a></li>
+<li><a id="toc_getaddressinfo" href="#getaddressinfo" class="fancy-link"><code class="highlighter-rouge">getaddressinfo</code></a></li>
+<li><a id="toc_connect" href="#connect" class="fancy-link"><code class="highlighter-rouge">connect</code></a></li>
+<li><a id="toc_readwrite" href="#readwrite" class="fancy-link"><code class="highlighter-rouge">read</code>/<code class="highlighter-rouge">write</code></a></li>
+<li><a id="toc_complete-simple-tcp-client-example" href="#complete-simple-tcp-client-example" class="fancy-link">Complete Simple TCP Client Example</a></li>
+<li><a id="toc_comment-on-http-request-and-response" href="#comment-on-http-request-and-response" class="fancy-link">Comment on HTTP request and response</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+<div class="title"><h2 id="socket" class="title-text">
+<code class="highlighter-rouge"><a href="https://linux.die.net/man/3/socket" class="fancy-link">socket</a></code><a class="anchor title-text" href="#socket">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p><code class="highlighter-rouge">int socket(int domain, int socket_type, int protocol);</code></p>
+<p>Socket creates a socket with domain (e.g. AF_INET for IPv4 or AF_INET6 for IPv6), <code class="highlighter-rouge">socket_type</code> is whether to use UDP or TCP or other socket type, <code class="highlighter-rouge">protocol</code> is an optional choice of protocol configuration (for our examples this we can just leave this as 0 for default). This call creates a socket object in the kernel with which one can communicate with the outside world/network. 
+You can use the result of <code class="highlighter-rouge">getaddressinfo</code> to fill in the <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/socket" class="fancy-link">socket</a></code> parameters, or provide them manually.</p>
+<p>The socket call returns an integer - a file descriptor - and, for TCP clients, you can use it like a regular file descriptor i.e. you can use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/read" class="fancy-link">read</a></code> and <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/write" class="fancy-link">write</a></code> to receive or send packets.</p>
+<p>TCP sockets are similar to <code class="highlighter-rouge">pipes</code> except that they allow full duplex communication i.e. you can send and receive data in both directions independently.</p>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="getaddressinfo" class="title-text">
+<code class="highlighter-rouge">getaddressinfo</code><a class="anchor title-text" href="#getaddressinfo">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1"><p>We saw this in the last section! You’re experts at this.</p></div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="connect" class="title-text">
+<code class="highlighter-rouge"><a href="https://linux.die.net/man/3/connect" class="fancy-link">connect</a></code><a class="anchor title-text" href="#connect">#</a>
+</h2></div>
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p><code class="highlighter-rouge">int connectok = connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);</code></p>
+<p>Pass <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/connect" class="fancy-link">connect</a></code> the socket file descriptor, the address you want to connect to and the length in bytes of the address structure. To help identify errors and mistakes it is good practice to check the return value of all networking calls, including <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/connect" class="fancy-link">connect</a></code></p>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="readwrite" class="title-text">
+<code class="highlighter-rouge"><a href="https://linux.die.net/man/3/read" class="fancy-link">read</a></code>/<code class="highlighter-rouge"><a href="https://linux.die.net/man/3/write" class="fancy-link">write</a></code><a class="anchor title-text" href="#readwrite">#</a>
+</h2></div>
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Once we have a successful connection we can read or write like any old file descriptor. Keep in mind if you are connected to a website, you want to conform to the HTTP protocol specification in order to get any sort of meaningful results back. There are libraries to do this, usually you don’t connect at the socket level because there are other libraries or packages around it.</p>
+<p>The number of bytes read or written may be smaller than expected. Thus it is important to check the return value of read and write.</p>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="complete-simple-tcp-client-example" class="title-text">Complete Simple TCP Client Example<a class="anchor title-text" href="#complete-simple-tcp-client-example">#</a>
+</h2></div>
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="cp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netdb.h&gt;
+#include &lt;unistd.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">s</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">sock_fd</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+    <span class="k">struct</span> <span class="n">addrinfo</span> <span class="n">hints</span><span class="p">,</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
+    <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span> <span class="p">(</span><span class="k">struct</span> <span class="n">addrinfo</span><span class="p">));</span>
+    <span class="n">hints</span><span class="p">.</span><span class="n">ai_family</span> <span class="o">=</span> <span class="n">AF_INET</span><span class="p">;</span> <span class="cm">/* IPv4 only */</span>
+    <span class="n">hints</span><span class="p">.</span><span class="n">ai_socktype</span> <span class="o">=</span> <span class="n">SOCK_STREAM</span><span class="p">;</span> <span class="cm">/* TCP */</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="n">getaddrinfo</span><span class="p">(</span><span class="s">"www.illinois.edu"</span><span class="p">,</span> <span class="s">"80"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"getaddrinfo: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">gai_strerror</span><span class="p">(</span><span class="n">s</span><span class="p">));</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">connect</span><span class="p">(</span><span class="n">sock_fd</span><span class="p">,</span> <span class="n">result</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">,</span> <span class="n">result</span><span class="o">-&gt;</span><span class="n">ai_addrlen</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">"connect"</span><span class="p">);</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kt">char</span> <span class="o">*</span><span class="n">buffer</span> <span class="o">=</span> <span class="s">"GET / HTTP/1.0</span><span class="se">\r\n\r\n</span><span class="s">"</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"SENDING: %s"</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"===</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+    <span class="c1">// For this trivial demo just assume write() sends all bytes in one go and is not interrupted</span>
+
+    <span class="n">write</span><span class="p">(</span><span class="n">sock_fd</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+
+    <span class="kt">char</span> <span class="n">resp</span><span class="p">[</span><span class="mi">1000</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">sock_fd</span><span class="p">,</span> <span class="n">resp</span><span class="p">,</span> <span class="mi">999</span><span class="p">);</span>
+    <span class="n">resp</span><span class="p">[</span><span class="n">len</span><span class="p">]</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">resp</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value="#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;string.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;sys/socket.h&amp;gt;
+#include &amp;lt;netdb.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+
+int main(int argc, char **argv) {
+    int s;
+    int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    struct addrinfo hints, *result;
+    memset(&amp;amp;hints, 0, sizeof (struct addrinfo));
+    hints.ai_family = AF_INET; /* IPv4 only */
+    hints.ai_socktype = SOCK_STREAM; /* TCP */
+
+    s = getaddrinfo(&quot;www.illinois.edu&quot;, &quot;80&quot;, &amp;amp;hints, &amp;amp;result);
+    if (s != 0) {
+        fprintf(stderr, &quot;getaddrinfo: %s\n&quot;, gai_strerror(s));
+        exit(1);
+    }
+
+    if (connect(sock_fd, result-&amp;gt;ai_addr, result-&amp;gt;ai_addrlen) == -1) {
+        perror(&quot;connect&quot;);
+        exit(2);
+    }
+
+    char *buffer = &quot;GET / HTTP/1.0\r\n\r\n&quot;;
+    printf(&quot;SENDING: %s&quot;, buffer);
+    printf(&quot;===\n&quot;);
+
+    // For this trivial demo just assume write() sends all bytes in one go and is not interrupted
+
+    write(sock_fd, buffer, strlen(buffer));
+
+    char resp[1000];
+    int len = read(sock_fd, resp, 999);
+    resp[len] = '\0';
+    printf(&quot;%s\n&quot;, resp);
+
+    return 0;
+}
+"></textarea></code></pre>
+<p>Example output:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SENDING: GET / HTTP/1.0
+
+===
+HTTP/1.1 200 OK
+Date: Mon, 27 Oct 2014 19:19:05 GMT
+Server: Apache/2.2.15 (Red Hat) mod_ssl/2.2.15 OpenSSL/1.0.1e-fips mod_jk/1.2.32
+Last-Modified: Fri, 03 Feb 2012 16:51:10 GMT
+ETag: "401b0-49-4b8121ea69b80"
+Accept-Ranges: bytes
+Content-Length: 73
+Connection: close
+Content-Type: text/html
+
+Provided by Web Services at Public Affairs at the University of Illinois
+</code></pre></div></div>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="comment-on-http-request-and-response" class="title-text">Comment on HTTP request and response<a class="anchor title-text" href="#comment-on-http-request-and-response">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>The example above demonstrates a request to the server using Hypertext Transfer Protocol.
+A web page (or other resources) are requested using the following request:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET / HTTP/1.0
+
+</code></pre></div></div>
+<p>There are four parts (the method e.g. GET,POST,…); the resource (e.g. / /index.html /image.png); the proctocol “HTTP/1.0” and two new lines (\r\n\r\n)</p>
+<p>The server’s first response line describes the HTTP version used and whether the request is successful using a 3 digit response code:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HTTP/1.1 200 OK
+</code></pre></div></div>
+<p>If the client had requested a non existing file, e.g. <code class="highlighter-rouge">GET /nosuchfile.html HTTP/1.0</code>
+Then the first line includes the response code is the well-known <code class="highlighter-rouge">404</code> response code:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HTTP/1.1 404 Not Found
+</code></pre></div></div>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/networking-part-3-building-a-simple-tcp-client.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

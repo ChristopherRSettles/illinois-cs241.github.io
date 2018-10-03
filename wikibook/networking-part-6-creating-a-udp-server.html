@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Networking, Part 6: Creating a UDP server</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Networking, Part 6: Creating a UDP server
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Networking,-Part-6:-Creating-a-UDP-server">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_how-do-i-create-a-udp-server" href="#how-do-i-create-a-udp-server" class="fancy-link">How do I create a UDP server?</a></li>
+<li><a id="toc_full-code" href="#full-code" class="fancy-link">Full Code</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-do-i-create-a-udp-server" class="title-text">How do I create a UDP server?<a class="anchor title-text" href="#how-do-i-create-a-udp-server">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>There are a variety of function calls available to send UDP sockets. We will use the newer getaddrinfo to help set up a socket structure.</p>
+<p>Remember that UDP is a simple packet-based (‘data-gram’) protocol ; there is no connection to set up between the two hosts.</p>
+<p>First, initialize the hints addrinfo struct to request an IPv6, passive datagram socket.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">hints</span><span class="p">));</span>
+<span class="n">hints</span><span class="p">.</span><span class="n">ai_family</span> <span class="o">=</span> <span class="n">AF_INET6</span><span class="p">;</span> <span class="c1">// use AF_INET instead for IPv4</span>
+<span class="n">hints</span><span class="p">.</span><span class="n">ai_socktype</span> <span class="o">=</span>  <span class="n">SOCK_DGRAM</span><span class="p">;</span>
+<span class="n">hints</span><span class="p">.</span><span class="n">ai_flags</span> <span class="o">=</span>  <span class="n">AI_PASSIVE</span><span class="p">;</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value="memset(&amp;amp;hints, 0, sizeof(hints));
+hints.ai_family = AF_INET6; // use AF_INET instead for IPv4
+hints.ai_socktype =  SOCK_DGRAM;
+hints.ai_flags =  AI_PASSIVE;
+"></textarea></code></pre>
+<p>Next, use getaddrinfo to specify the port number (we don’t need to specify a host as we are creating a server socket, not sending a packet to a remote host).</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="n">getaddrinfo</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="s">"300"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+
+<span class="n">sockfd</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_family</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_socktype</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_protocol</span><span class="p">);</span>
+<span class="n">bind</span><span class="p">(</span><span class="n">sockfd</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addrlen</span><span class="p">);</span>
+<textarea id="code-copy-1" class="code-copy-textarea" value='getaddrinfo(NULL, "300", &amp;amp;hints, &amp;amp;res);
+
+sockfd = socket(res-&amp;gt;ai_family, res-&amp;gt;ai_socktype, res-&amp;gt;ai_protocol);
+bind(sockfd, res-&amp;gt;ai_addr, res-&amp;gt;ai_addrlen);
+'></textarea></code></pre>
+<p>The port number is &lt;1024, so the program will need <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/root" class="fancy-link">root</a></code> privileges. We could have also specified a service name instead of a numeric port value.</p>
+<p>So far the calls have been similar to a TCP server. For a stream-based service we would call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/listen" class="fancy-link">listen</a></code> and accept. For our UDP-serve we can just start waiting for the arrival of a packet on the socket-</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="k">struct</span> <span class="n">sockaddr_storage</span> <span class="n">addr</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">addrlen</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">addr</span><span class="p">);</span>
+
+<span class="c1">// ssize_t recvfrom(int socket, void* buffer, size_t buflen, int flags, struct sockaddr *addr, socklen_t * address_len);</span>
+
+<span class="n">byte_count</span> <span class="o">=</span> <span class="n">recvfrom</span><span class="p">(</span><span class="n">sockfd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">addr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">addrlen</span><span class="p">);</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value="struct sockaddr_storage addr;
+int addrlen = sizeof(addr);
+
+// ssize_t recvfrom(int socket, void* buffer, size_t buflen, int flags, struct sockaddr *addr, socklen_t * address_len);
+
+byte_count = recvfrom(sockfd, buf, sizeof(buf), 0, &amp;amp;addr, &amp;amp;addrlen);
+"></textarea></code></pre>
+<p>The addr struct will hold sender (source) information about the arriving packet.
+Note the <code class="highlighter-rouge">sockaddr_storage</code> type is a sufficiently large enough to hold all possible types of socket addresses (e.g. IPv4, IPv6 and other socket types).</p>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="full-code" class="title-text">Full Code<a class="anchor title-text" href="#full-code">#</a>
+</h2></div>
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1"><pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="cp">#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netdb.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;arpa/inet.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">s</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="n">addrinfo</span> <span class="n">hints</span><span class="p">,</span> <span class="o">*</span><span class="n">res</span><span class="p">;</span>
+    <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">hints</span><span class="p">));</span>
+    <span class="n">hints</span><span class="p">.</span><span class="n">ai_family</span> <span class="o">=</span> <span class="n">AF_INET6</span><span class="p">;</span> <span class="c1">// INET for IPv4</span>
+    <span class="n">hints</span><span class="p">.</span><span class="n">ai_socktype</span> <span class="o">=</span>  <span class="n">SOCK_DGRAM</span><span class="p">;</span>
+    <span class="n">hints</span><span class="p">.</span><span class="n">ai_flags</span> <span class="o">=</span>  <span class="n">AI_PASSIVE</span><span class="p">;</span>
+
+    <span class="n">getaddrinfo</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="s">"300"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+
+    <span class="kt">int</span> <span class="n">sockfd</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_family</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_socktype</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_protocol</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="n">sockfd</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addrlen</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">"bind()"</span><span class="p">);</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">struct</span> <span class="n">sockaddr_storage</span> <span class="n">addr</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">addrlen</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">addr</span><span class="p">);</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+        <span class="kt">ssize_t</span> <span class="n">byte_count</span> <span class="o">=</span> <span class="n">recvfrom</span><span class="p">(</span><span class="n">sockfd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">addr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">addrlen</span><span class="p">);</span>
+        <span class="n">buf</span><span class="p">[</span><span class="n">byte_count</span><span class="p">]</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="p">;</span>
+
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Read %d chars</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">byte_count</span><span class="p">);</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"===</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="#include &amp;lt;string.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;sys/socket.h&amp;gt;
+#include &amp;lt;netdb.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;arpa/inet.h&amp;gt;
+
+int main(int argc, char **argv)
+{
+    int s;
+
+    struct addrinfo hints, *res;
+    memset(&amp;amp;hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET6; // INET for IPv4
+    hints.ai_socktype =  SOCK_DGRAM;
+    hints.ai_flags =  AI_PASSIVE;
+
+    getaddrinfo(NULL, &quot;300&quot;, &amp;amp;hints, &amp;amp;res);
+
+    int sockfd = socket(res-&amp;gt;ai_family, res-&amp;gt;ai_socktype, res-&amp;gt;ai_protocol);
+
+    if (bind(sockfd, res-&amp;gt;ai_addr, res-&amp;gt;ai_addrlen) != 0) {
+        perror(&quot;bind()&quot;);
+        exit(1);
+    }
+    struct sockaddr_storage addr;
+    int addrlen = sizeof(addr);
+
+    while(1){
+        char buf[1024];
+        ssize_t byte_count = recvfrom(sockfd, buf, sizeof(buf), 0, &amp;amp;addr, &amp;amp;addrlen);
+        buf[byte_count] = '\0';
+
+        printf(&quot;Read %d chars\n&quot;, byte_count);
+        printf(&quot;===\n&quot;);
+        printf(&quot;%s\n&quot;, buf);
+    }
+
+    return 0;
+}
+"></textarea></code></pre></div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/networking-part-6-creating-a-udp-server.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

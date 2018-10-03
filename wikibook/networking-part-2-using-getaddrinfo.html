@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Networking, Part 2: Using getaddrinfo</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Networking, Part 2: Using getaddrinfo
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Networking,-Part-2:-Using-getaddrinfo">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_how-do-i-use-getaddrinfo-to-convert-the-hostname-into-an-ip-address" href="#how-do-i-use-getaddrinfo-to-convert-the-hostname-into-an-ip-address" class="fancy-link">How do I use <code class="highlighter-rouge">getaddrinfo</code> to convert the hostname into an IP address?</a></li>
+<li><a id="toc_how-is-wwwcsillinoisedu-converted-into-an-ip-address" href="#how-is-wwwcsillinoisedu-converted-into-an-ip-address" class="fancy-link">How is www.cs.illinois.edu converted into an IP address?</a></li>
+<li><a id="toc_is-dns-secure" href="#is-dns-secure" class="fancy-link">Is DNS secure?</a></li>
+<li><a id="toc_how-do-i-connect-to-a-tcp-server-eg-web-server" href="#how-do-i-connect-to-a-tcp-server-eg-web-server" class="fancy-link">How do I connect to a TCP server (e.g. web server?)</a></li>
+<li><a id="toc_how-do-i-free-the-memory-allocated-for-the-linked-list-of-addrinfo-structs" href="#how-do-i-free-the-memory-allocated-for-the-linked-list-of-addrinfo-structs" class="fancy-link">How do I free the memory allocated for the linked-list of addrinfo structs?</a></li>
+<li><a id="toc_if-getaddrinfo-fails-can-i-use-strerror-to-print-out-the-error" href="#if-getaddrinfo-fails-can-i-use-strerror-to-print-out-the-error" class="fancy-link">If getaddrinfo fails can I use <code class="highlighter-rouge">strerror</code> to print out the error?</a></li>
+<li><a id="toc_can-i-request-only-ipv4-or-ipv6-connection-tcp-only" href="#can-i-request-only-ipv4-or-ipv6-connection-tcp-only" class="fancy-link">Can I request only IPv4 or IPv6 connection? TCP only?</a></li>
+<li><a id="toc_what-about-code-examples-that-use-gethostbyname" href="#what-about-code-examples-that-use-gethostbyname" class="fancy-link">What about code examples that use <code class="highlighter-rouge">gethostbyname</code>?</a></li>
+<li><a id="toc_is-it-that-easy" href="#is-it-that-easy" class="fancy-link">Is it that easy!?</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-do-i-use-getaddrinfo-to-convert-the-hostname-into-an-ip-address" class="title-text">How do I use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getaddrinfo" class="fancy-link">getaddrinfo</a></code> to convert the hostname into an IP address?<a class="anchor title-text" href="#how-do-i-use-getaddrinfo-to-convert-the-hostname-into-an-ip-address">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>The function <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getaddrinfo" class="fancy-link">getaddrinfo</a></code> can convert a human readable domain name (e.g. <code class="highlighter-rouge">www.illinois.edu</code>) into an IPv4 and IPv6 address. In fact it will return a linked-list of addrinfo structs:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="k">struct</span> <span class="n">addrinfo</span> <span class="p">{</span>
+    <span class="kt">int</span>              <span class="n">ai_flags</span><span class="p">;</span>
+    <span class="kt">int</span>              <span class="n">ai_family</span><span class="p">;</span>
+    <span class="kt">int</span>              <span class="n">ai_socktype</span><span class="p">;</span>
+    <span class="kt">int</span>              <span class="n">ai_protocol</span><span class="p">;</span>
+    <span class="n">socklen_t</span>        <span class="n">ai_addrlen</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">sockaddr</span> <span class="o">*</span><span class="n">ai_addr</span><span class="p">;</span>
+    <span class="kt">char</span>            <span class="o">*</span><span class="n">ai_canonname</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">addrinfo</span> <span class="o">*</span><span class="n">ai_next</span><span class="p">;</span>
+<span class="p">};</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value="struct addrinfo {
+    int              ai_flags;
+    int              ai_family;
+    int              ai_socktype;
+    int              ai_protocol;
+    socklen_t        ai_addrlen;
+    struct sockaddr *ai_addr;
+    char            *ai_canonname;
+    struct addrinfo *ai_next;
+};
+"></textarea></code></pre>
+<p>It’s very easy to use. For example, suppose you wanted to find out the numeric IPv4 address of a webserver at www.bbc.com. We do this in two stages. First use getaddrinfo to build a linked-list of possible connections. Secondly use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getnameinfo" class="fancy-link">getnameinfo</a></code> to convert the binary address into a readable form.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="cp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netdb.h&gt;
+</span>
+<span class="k">struct</span> <span class="n">addrinfo</span> <span class="n">hints</span><span class="p">,</span> <span class="o">*</span><span class="n">infoptr</span><span class="p">;</span> <span class="c1">// So no need to use memset global variables</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">hints</span><span class="p">.</span><span class="n">ai_family</span> <span class="o">=</span> <span class="n">AF_INET</span><span class="p">;</span> <span class="c1">// AF_INET means IPv4 only addresses</span>
+
+    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">getaddrinfo</span><span class="p">(</span><span class="s">"www.bbc.com"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">infoptr</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"getaddrinfo: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">gai_strerror</span><span class="p">(</span><span class="n">result</span><span class="p">));</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">struct</span> <span class="n">addrinfo</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">host</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">p</span> <span class="o">=</span> <span class="n">infoptr</span><span class="p">;</span> <span class="n">p</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">-&gt;</span><span class="n">ai_next</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="n">getnameinfo</span><span class="p">(</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">,</span> <span class="n">p</span><span class="o">-&gt;</span><span class="n">ai_addrlen</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">host</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">NI_NUMERICHOST</span><span class="p">);</span>
+        <span class="n">puts</span><span class="p">(</span><span class="n">host</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">freeaddrinfo</span><span class="p">(</span><span class="n">infoptr</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-1" class="code-copy-textarea" value='#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;sys/socket.h&amp;gt;
+#include &amp;lt;netdb.h&amp;gt;
+
+struct addrinfo hints, *infoptr; // So no need to use memset global variables
+
+int main() {
+    hints.ai_family = AF_INET; // AF_INET means IPv4 only addresses
+
+    int result = getaddrinfo("www.bbc.com", NULL, &amp;amp;hints, &amp;amp;infoptr);
+    if (result) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(result));
+        exit(1);
+    }
+
+    struct addrinfo *p;
+    char host[256];
+
+    for (p = infoptr; p != NULL; p = p-&amp;gt;ai_next) {
+
+        getnameinfo(p-&amp;gt;ai_addr, p-&amp;gt;ai_addrlen, host, sizeof (host), NULL, 0, NI_NUMERICHOST);
+        puts(host);
+    }
+
+    freeaddrinfo(infoptr);
+    return 0;
+}
+'></textarea></code></pre>
+<p>Typical output:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>212.58.244.70
+212.58.244.71
+</code></pre></div></div>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-is-wwwcsillinoisedu-converted-into-an-ip-address" class="title-text">How is www.cs.illinois.edu converted into an IP address?<a class="anchor title-text" href="#how-is-wwwcsillinoisedu-converted-into-an-ip-address">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1"><p>Magic! No seriously, a system called “DNS” (Domain Name Service) is used. If a machine does not hold the answer locally then it sends a UDP packet to a local DNS server. This server in turn may query other upstream DNS servers.</p></div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="is-dns-secure" class="title-text">Is DNS secure?<a class="anchor title-text" href="#is-dns-secure">#</a>
+</h2></div>
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1"><p>DNS by itself is fast but not secure. DNS requests are not encrypted and susceptible to ‘man-in-the-middle’ attacks. For example, a coffee shop internet connection could easily subvert your DNS requests and send back different IP addresses for a particular domain</p></div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-do-i-connect-to-a-tcp-server-eg-web-server" class="title-text">How do I connect to a TCP server (e.g. web server?)<a class="anchor title-text" href="#how-do-i-connect-to-a-tcp-server-eg-web-server">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>TODO</p>
+<p>There are three basic system calls you need to connect to a remote machine:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>getaddrinfo -- Determine the remote addresses of a remote host
+socket      -- Create a socket
+connect     -- Connect to the remote host using the socket and address information
+</code></pre></div></div>
+<p>The <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getaddrinfo" class="fancy-link">getaddrinfo</a></code> call if successful, creates a linked-list of <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/addrinfo" class="fancy-link">addrinfo</a></code> structs and sets the given pointer to point to the first one.</p>
+<p>The socket call creates an outgoing socket and returns a descriptor (sometimes called a ‘file descriptor’) that can be used with <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/read" class="fancy-link">read</a></code> and <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/write" class="fancy-link">write</a></code> etc. In this sense it is the network analog of <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/open" class="fancy-link">open</a></code> that opens a file stream - except that we haven’t connected the socket to anything yet!</p>
+<p>Finally the connect call attempts the connection to the remote machine. We pass the original socket descriptor and also the socket address information which is stored inside the addrinfo structure. There are different kinds of socket address structures (e.g. IPv4 vs IPv6) which can require more memory. So in addition to passing the pointer, the size of the structure is also passed:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="c1">// Pull out the socket address info from the addrinfo struct:</span>
+<span class="n">connect</span><span class="p">(</span><span class="n">sockfd</span><span class="p">,</span> <span class="n">p</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">,</span> <span class="n">p</span><span class="o">-&gt;</span><span class="n">ai_addrlen</span><span class="p">);</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value="// Pull out the socket address info from the addrinfo struct:
+connect(sockfd, p-&amp;gt;ai_addr, p-&amp;gt;ai_addrlen);
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-do-i-free-the-memory-allocated-for-the-linked-list-of-addrinfo-structs" class="title-text">How do I free the memory allocated for the linked-list of addrinfo structs?<a class="anchor title-text" href="#how-do-i-free-the-memory-allocated-for-the-linked-list-of-addrinfo-structs">#</a>
+</h2></div>
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>As part of the clean up code call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/freeaddrinfo" class="fancy-link">freeaddrinfo</a></code> on the top-most <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/addrinfo" class="fancy-link">addrinfo</a></code> struct:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="kt">void</span> <span class="n">freeaddrinfo</span><span class="p">(</span><span class="k">struct</span> <span class="n">addrinfo</span> <span class="o">*</span><span class="n">ai</span><span class="p">);</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="void freeaddrinfo(struct addrinfo *ai);
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="if-getaddrinfo-fails-can-i-use-strerror-to-print-out-the-error" class="title-text">If getaddrinfo fails can I use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/strerror" class="fancy-link">strerror</a></code> to print out the error?<a class="anchor title-text" href="#if-getaddrinfo-fails-can-i-use-strerror-to-print-out-the-error">#</a>
+</h2></div>
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>No. Error handling with <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getaddrinfo" class="fancy-link">getaddrinfo</a></code> is a little different:</p>
+<ul>
+  <li>The return value <em>is</em> the error code (i.e. don’t use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/errno" class="fancy-link">errno</a></code>)</li>
+  <li>Use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/gai_strerror" class="fancy-link">gai_strerror</a></code> to get the equivalent short English error text:</li>
+</ul>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-4" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">getaddrinfo</span><span class="p">(...);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">mesg</span> <span class="o">=</span> <span class="n">gai_strerror</span><span class="p">(</span><span class="n">result</span><span class="p">);</span> 
+    <span class="p">...</span>
+<span class="p">}</span>
+<textarea id="code-copy-4" class="code-copy-textarea" value="int result = getaddrinfo(...);
+if (result) { 
+    const char *mesg = gai_strerror(result); 
+    ...
+}
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="can-i-request-only-ipv4-or-ipv6-connection-tcp-only" class="title-text">Can I request only IPv4 or IPv6 connection? TCP only?<a class="anchor title-text" href="#can-i-request-only-ipv4-or-ipv6-connection-tcp-only">#</a>
+</h2></div>
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Yes! Use the addrinfo structure that is passed into <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getaddrinfo" class="fancy-link">getaddrinfo</a></code> to define the kind of connection you’d like.</p>
+<p>For example, to specify stream-based protocols over IPv6:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-5" onclick="onCopy(this);">Copy</a><span class="k">struct</span> <span class="n">addrinfo</span> <span class="n">hints</span><span class="p">;</span>
+<span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">hints</span><span class="p">));</span>
+
+<span class="n">hints</span><span class="p">.</span><span class="n">ai_family</span> <span class="o">=</span> <span class="n">AF_INET6</span><span class="p">;</span> <span class="c1">// Only want IPv6 (use AF_INET for IPv4)</span>
+<span class="n">hints</span><span class="p">.</span><span class="n">ai_socktype</span> <span class="o">=</span> <span class="n">SOCK_STREAM</span><span class="p">;</span> <span class="c1">// Only want stream-based connection</span>
+<textarea id="code-copy-5" class="code-copy-textarea" value="struct addrinfo hints;
+memset(&amp;amp;hints, 0, sizeof (hints));
+
+hints.ai_family = AF_INET6; // Only want IPv6 (use AF_INET for IPv4)
+hints.ai_socktype = SOCK_STREAM; // Only want stream-based connection
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="what-about-code-examples-that-use-gethostbyname" class="title-text">What about code examples that use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/gethostbyname" class="fancy-link">gethostbyname</a></code>?<a class="anchor title-text" href="#what-about-code-examples-that-use-gethostbyname">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1"><p>The old function <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/gethostbyname" class="fancy-link">gethostbyname</a></code> is deprecated; it’s the old way convert a host name into an IP address. The port address still needs to be manually set using htons function. It’s much easier to write code to support IPv4 AND IPv6 using the newer <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getaddrinfo" class="fancy-link">getaddrinfo</a></code></p></div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="is-it-that-easy" class="title-text">Is it that easy!?<a class="anchor title-text" href="#is-it-that-easy">#</a>
+</h2></div>
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1"><p>Yes and no. It’s easy to create a simple TCP client - however network communications offers many different levels of abstraction and several attributes and options that can be set at each level of abstraction (for example we haven’t talked about <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/setsockopt" class="fancy-link">setsockopt</a></code> which can manipulate options for the socket).
+For more information see <a href="https://beej.us/guide/bgnet/html/multi/index.html" class="fancy-link wiki-link">Beej’s guide</a>.</p></div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/networking-part-2-using-getaddrinfo.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

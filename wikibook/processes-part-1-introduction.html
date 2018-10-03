@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Processes, Part 1: Introduction</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Processes, Part 1: Introduction
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Processes,-Part-1:-Introduction">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_okay-but-whats-a-program" href="#okay-but-whats-a-program" class="fancy-link">Okay, but what’s a program?</a></li>
+<li><a id="toc_in-the-beginning" href="#in-the-beginning" class="fancy-link">In the beginning</a></li>
+<li><a id="toc_process-isolation" href="#process-isolation" class="fancy-link">Process Isolation</a></li>
+<li><a id="toc_memory-layout" href="#memory-layout" class="fancy-link">Memory Layout</a></li>
+<li><a id="toc_process-id-pid" href="#process-id-pid" class="fancy-link">Process ID (PID)</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="overview">Overview</h1>
+<p>A process is program that is running, kinda. A process is also just one instance of that computer program running. Processes have a lot of things at their disposal. At the start of each program you get one process, but each program can make more processes. In fact, your operating system starts up with only one process and all other processes are forked off of that – all of that is done under the hood when booting up.</p>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="okay-but-whats-a-program" class="title-text">Okay, but what’s a program?<a class="anchor title-text" href="#okay-but-whats-a-program">#</a>
+</h2></div>
+
+<p>Programs usually contain the following</p>
+<ul>
+  <li>A binary format: This tells the operating system which set of bits in the binary are what – which part is executable, which parts are constants, which libraries to include etc.</li>
+  <li>A set of machine instructions</li>
+  <li>A number denoting which instruction to start from</li>
+  <li>Constants</li>
+  <li>Libraries to link and where to fill in the address of those libraries</li>
+</ul>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="in-the-beginning" class="title-text">In the beginning<a class="anchor title-text" href="#in-the-beginning">#</a>
+</h2></div>
+
+<p>When your operating system starts on a linux machine, there is a process called <code class="highlighter-rouge">init.d</code> that gets created. That process is a special one handling signals, interrupts, and a persistence module for certain kernel elements. Whenever you want to make a new process, you call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/fork" class="fancy-link">fork</a></code> (to be discussed in a later section) and use another function to load another program.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="process-isolation" class="title-text">Process Isolation<a class="anchor title-text" href="#process-isolation">#</a>
+</h2></div>
+
+<p>Processes are very powerful but they are isolated! That means that by default, no process can communicate with another process. This is very important because if you have a large system (let’s say EWS) then you want some processes to have higher privileges (monitoring, admin) than your average user, and one certainly doesn’t want the average user to be able to bring down the entire system either on purpose or accidentally by modifying a process.</p>
+
+<p>If I run the following code,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int secrets; //maybe defined in the kernel or else where
+secrets++;
+printf("%d\n", secrets);
+</code></pre></div></div>
+
+<p>On two different terminals, as you would guess they would both print out 1 not 2. Even if we changed the code to do something really hacky (apart from reading the memory directly) there would be no way to change another process’ state (okay maybe <a href="https://en.wikipedia.org/wiki/Dirty_COW" class="fancy-link wiki-link">this</a> but that is getting a little too in depth).</p>
+
+</div></div>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="process-contents">Process Contents</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="memory-layout" class="title-text">Memory Layout<a class="anchor title-text" href="#memory-layout">#</a>
+</h2></div>
+<div>
+<div style="display: table;margin: 0 auto;">
+&lt;img src="https://i.imgur.com/pl6K5cF.png" width=600 style="display: block;margin: 0 auto"&gt;
+</div>
+</div>
+
+<p>When a process starts, it gets its own address space. Meaning that each process gets :</p>
+<ul>
+  <li>
+<strong>A Stack</strong>. The Stack is the place where automatic variable and function call return addresses are stored. Every time a new variable is declared, the program moves the stack pointer down to reserve space for the variable. This segment of the stack is Writable but not executable. If the stack grows too far – meaning that it either grows beyond a preset boundary or intersects the heap – you will get a stackoverflow most likely resulting in a SEGFAULT or something similar. <strong>The stack is statically allocated by default meaning that there is only a certain amount of space to which one can write</strong>
+</li>
+  <li>
+<strong>A Heap</strong>. The heap is an expanding region of memory. If you want to allocate a large object, it goes here. The heap starts at the top of the text segment and grows upward (meaning sometimes when you call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/malloc" class="fancy-link">malloc</a></code> that it asks the operating system to push the heap boundary upward). This area is also Writable but not Executable. One can run out of heap memory if the system is constrained or if you run out of addresses (more common on a 32bit system).</li>
+  <li>
+<strong>A Data Segment</strong> This contains all of your globals. This section starts at the end of the text segment and is static in size because the amount of globals is known at compile time. There are two areas to the data usually the <strong>IBSS</strong> and the <strong>UBSS</strong> which stand for the initialized basic service set and the uninitialized data segment respectively. This section is Writable but not Executable and there isn’t anything else too fancy here.</li>
+  <li>
+<strong>A Text Segment</strong>. This is, arguably, the most important section of the address. This is where all your code is stored. Since assembly compiles to 1’s and 0’s, this is where the 1’s and 0’s get stored. The program counter moves through this segment executing instructions and moving down the next instruction. It is important to note that this is the only Executable section of the code. If you try to change the code while it’s running, most likely you will segfault (there are ways around it but just assume that it segfaults).</li>
+  <li>Why doesn’t it start at zero? It is outside the <a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization" class="fancy-link wiki-link">scope</a> of this class but it is for security.</li>
+</ul>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="process-id-pid" class="title-text">Process ID (PID)<a class="anchor title-text" href="#process-id-pid">#</a>
+</h2></div>
+
+<p>To keep track of all these processes, your operating system gives each process a number and that process is called the PID, process ID. Processes also have a <code class="highlighter-rouge">ppid</code> which is short for parent process id. Every process has a parent, that parent could be <code class="highlighter-rouge">init.d</code></p>
+
+<p>Processes could also contain</p>
+<ul>
+  <li>Running State - Whether a process is getting ready, running, stopped, terminated etc.</li>
+  <li>File Descriptors - List of mappings from integers to real devices (files, usb sticks, sockets)</li>
+  <li>Permissions - What <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/user" class="fancy-link">user</a></code> the file is running on and what <code class="highlighter-rouge">group</code> the process belongs to. The process can then only do this admissible to the <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/user" class="fancy-link">user</a></code> or <code class="highlighter-rouge">group</code> like opening a file that the <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/user" class="fancy-link">user</a></code> has made exclusives. There are tricks to make a program not be the user who started the program i.e. <code class="highlighter-rouge">sudo</code> takes a program that a <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/user" class="fancy-link">user</a></code> starts and executes it as <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/root" class="fancy-link">root</a></code>.</li>
+  <li>Arguments - a list of strings that tell your program what parameters to run under</li>
+  <li>Environment List - a list of strings in the form <code class="highlighter-rouge">NAME=VALUE</code> that one can modify.</li>
+</ul>
+
+<div align="center">
+<a href="/wikibook/forking-part-1-introduction.html#" class="fancy-link wiki-link">
+Forking, Part 1: Introduction
+</a>
+</div>
+</div></div>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/processes-part-1-introduction.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

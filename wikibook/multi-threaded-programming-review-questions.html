@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Multi threaded Programming: Review Questions</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Multi threaded Programming: Review Questions
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Multi-threaded-Programming:-Review-Questions">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_q1" href="#q1" class="fancy-link">Q1</a></li>
+<li><a id="toc_q2" href="#q2" class="fancy-link">Q2</a></li>
+<li><a id="toc_q3" href="#q3" class="fancy-link">Q3</a></li>
+<li><a id="toc_q4" href="#q4" class="fancy-link">Q4</a></li>
+<li><a id="toc_q5" href="#q5" class="fancy-link">Q5</a></li>
+<li><a id="toc_q6" href="#q6" class="fancy-link">Q6</a></li>
+<li><a id="toc_q7" href="#q7" class="fancy-link">Q7</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<blockquote>
+  <p>Warning - question numbers subject to change</p>
+</blockquote>
+
+<div class="pad"><div class="card">
+<div class="title"><h2 id="q1" class="title-text">Q1<a class="anchor title-text" href="#q1">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Is the following code thread-safe? Redesign the following code to be thread-safe. Hint: A mutex is unnecessary if the message memory is unique to each call.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="k">static</span> <span class="kt">char</span> <span class="n">message</span><span class="p">[</span><span class="mi">20</span><span class="p">];</span>
+<span class="n">pthread_mutex_t</span> <span class="n">mutex</span> <span class="o">=</span> <span class="n">PTHREAD_MUTEX_INITIALIZER</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="o">*</span><span class="nf">format</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mutex</span><span class="p">);</span>
+  <span class="n">sprintf</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s">":%d:"</span> <span class="p">,</span><span class="n">v</span><span class="p">);</span>
+  <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mutex</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">message</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value='static char message[20];
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *format(int v) {
+  pthread_mutex_lock(&amp;amp;mutex);
+  sprintf(message, ":%d:" ,v);
+  pthread_mutex_unlock(&amp;amp;mutex);
+  return message;
+}
+'></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="q2" class="title-text">Q2<a class="anchor title-text" href="#q2">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Which one of the following does not cause a process to exit?</p>
+<ul>
+  <li>Returning from the pthread’s starting function in the last running thread.</li>
+  <li>The original thread returning from main.</li>
+  <li>Any thread causing a segmentation fault.</li>
+  <li>Any thread calling <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/exit" class="fancy-link">exit</a></code>.</li>
+  <li>Calling <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_exit" class="fancy-link">pthread_exit</a></code> in the main thread with other threads still running.</li>
+</ul>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="q3" class="title-text">Q3<a class="anchor title-text" href="#q3">#</a>
+</h2></div>
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Write a mathematical expression for the number of “W” characters that will be printed by the following program. Assume a,b,c,d are small positive integers. Your answer may use a ‘min’ function that returns its lowest valued argument.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">a</span><span class="o">=</span><span class="p">...,</span><span class="n">b</span><span class="o">=</span><span class="p">...,</span><span class="n">c</span><span class="o">=</span><span class="p">...,</span><span class="n">d</span><span class="o">=</span><span class="p">...;</span>
+
+<span class="kt">void</span><span class="o">*</span> <span class="nf">func</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">m</span> <span class="o">=</span> <span class="o">*</span> <span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="n">ptr</span><span class="p">;</span>
+  <span class="k">if</span><span class="p">(</span><span class="n">m</span> <span class="o">==</span> <span class="sc">'P'</span><span class="p">)</span> <span class="n">sem_post</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+  <span class="k">if</span><span class="p">(</span><span class="n">m</span> <span class="o">==</span> <span class="sc">'W'</span><span class="p">)</span> <span class="n">sem_wait</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+  <span class="n">putchar</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argv</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argc</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">sem_init</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+  <span class="k">while</span><span class="p">(</span><span class="n">b</span><span class="o">--</span><span class="p">)</span> <span class="n">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tid</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="s">"W"</span><span class="p">);</span> 
+  <span class="k">while</span><span class="p">(</span><span class="n">c</span><span class="o">--</span><span class="p">)</span> <span class="n">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tid</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="s">"P"</span><span class="p">);</span> 
+  <span class="k">while</span><span class="p">(</span><span class="n">d</span><span class="o">--</span><span class="p">)</span> <span class="n">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tid</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="s">"W"</span><span class="p">);</span> 
+  <span class="n">pthread_exit</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span> 
+  <span class="cm">/*Process will finish when all threads have exited */</span>
+<span class="p">}</span>
+<textarea id="code-copy-1" class="code-copy-textarea" value="unsigned int a=...,b=...,c=...,d=...;
+
+void* func(void* ptr) {
+  char m = * (char*)ptr;
+  if(m == 'P') sem_post(s);
+  if(m == 'W') sem_wait(s);
+  putchar(m);
+  return NULL;
+}
+
+int main(int argv, char** argc) {
+  sem_init(s,0, a);
+  while(b--) pthread_create(&amp;amp;tid, NULL, func, &quot;W&quot;); 
+  while(c--) pthread_create(&amp;amp;tid, NULL, func, &quot;P&quot;); 
+  while(d--) pthread_create(&amp;amp;tid, NULL, func, &quot;W&quot;); 
+  pthread_exit(NULL); 
+  /*Process will finish when all threads have exited */
+}
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="q4" class="title-text">Q4<a class="anchor title-text" href="#q4">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Complete the following code. The following code is supposed to print alternating <code class="highlighter-rouge">A</code> and <code class="highlighter-rouge">B</code>. It represents two threads that take turns to execute.  Add condition variable calls to <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/func" class="fancy-link">func</a></code> so that the waiting thread does not need to continually check the <code class="highlighter-rouge">turn</code> variable. Q: Is pthread_cond_broadcast necessary or is pthread_cond_signal sufficient?</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="n">pthread_cond_t</span> <span class="n">cv</span> <span class="o">=</span> <span class="n">PTHREAD_COND_INITIALIZER</span><span class="p">;</span>
+<span class="n">pthread_mutex_t</span> <span class="n">m</span> <span class="o">=</span> <span class="n">PTHREAD_MUTEX_INITIALIZER</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="o">*</span> <span class="n">turn</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="o">*</span> <span class="nf">func</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">mesg</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+<span class="c1">// Add mutex lock and condition variable calls ...</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="n">turn</span> <span class="o">==</span> <span class="n">mesg</span><span class="p">)</span> <span class="p">{</span> 
+        <span class="cm">/* poll again ... Change me - This busy loop burns CPU time! */</span> 
+    <span class="p">}</span>
+
+    <span class="cm">/* Do stuff on this thread */</span>
+    <span class="n">puts</span><span class="p">(</span> <span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">mesg</span><span class="p">);</span>
+    <span class="n">turn</span> <span class="o">=</span> <span class="n">mesg</span><span class="p">;</span>
+    
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">){</span>
+  <span class="n">pthread_t</span> <span class="n">tid1</span><span class="p">;</span>
+  <span class="n">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tid1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="s">"A"</span><span class="p">);</span>
+  <span class="n">func</span><span class="p">(</span><span class="s">"B"</span><span class="p">);</span> <span class="c1">// no need to create another thread - just use the main thread</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value='pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+
+void* turn;
+
+void* func(void* mesg) {
+  while(1) {
+// Add mutex lock and condition variable calls ...
+
+    while(turn == mesg) { 
+        /* poll again ... Change me - This busy loop burns CPU time! */ 
+    }
+
+    /* Do stuff on this thread */
+    puts( (char*) mesg);
+    turn = mesg;
+    
+  }
+  return 0;
+}
+
+int main(int argc, char** argv){
+  pthread_t tid1;
+  pthread_create(&amp;amp;tid1, NULL, func, "A");
+  func("B"); // no need to create another thread - just use the main thread
+  return 0;
+}
+'></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="q5" class="title-text">Q5<a class="anchor title-text" href="#q5">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Identify the critical sections in the given code. Add mutex locking to make the code thread safe. Add condition variable calls so that <code class="highlighter-rouge">total</code> never becomes negative or above 1000. Instead the call should block until it is safe to proceed. Explain why <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_broadcast" class="fancy-link">pthread_cond_broadcast</a></code> is necessary.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">total</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+ <span class="k">if</span><span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+ <span class="n">total</span> <span class="o">+=</span> <span class="n">value</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">sub</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+ <span class="k">if</span><span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+ <span class="n">total</span> <span class="o">-=</span> <span class="n">value</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="int total;
+void add(int value) {
+ if(value &amp;lt; 1) return;
+ total += value;
+}
+void sub(int value) {
+ if(value &amp;lt; 1) return;
+ total -= value;
+}
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="q6" class="title-text">Q6<a class="anchor title-text" href="#q6">#</a>
+</h2></div>
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>A non-threadsafe data structure has <code class="highlighter-rouge">size()</code> <code class="highlighter-rouge">enq</code> and <code class="highlighter-rouge">deq</code> methods. Use condition variable and mutex lock to complete the thread-safe, blocking versions.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-4" onclick="onCopy(this);">Copy</a><span class="kt">void</span> <span class="nf">enqueue</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">data</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// should block if the size() would become greater than 256</span>
+  <span class="n">enq</span><span class="p">(</span><span class="n">data</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">void</span><span class="o">*</span> <span class="nf">dequeue</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// should block if size() is 0</span>
+  <span class="k">return</span> <span class="n">deq</span><span class="p">();</span>
+<span class="p">}</span>
+<textarea id="code-copy-4" class="code-copy-textarea" value="void enqueue(void* data) {
+  // should block if the size() would become greater than 256
+  enq(data);
+}
+void* dequeue() {
+  // should block if size() is 0
+  return deq();
+}
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="q7" class="title-text">Q7<a class="anchor title-text" href="#q7">#</a>
+</h2></div>
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Your startup offers path planning using latest traffic information. Your overpaid intern has created a non-threadsafe data structure with two functions: <code class="highlighter-rouge">shortest</code> (which uses but does not modify the graph) and <code class="highlighter-rouge">set_edge</code> (which modifies the graph).</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-5" onclick="onCopy(this);">Copy</a><span class="n">graph_t</span><span class="o">*</span> <span class="n">create_graph</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">filename</span><span class="p">);</span> <span class="c1">// called once</span>
+
+<span class="c1">// returns a new heap object that is the shortest path from vertex i to j</span>
+<span class="n">path_t</span><span class="o">*</span> <span class="n">shortest</span><span class="p">(</span><span class="n">graph_t</span><span class="o">*</span> <span class="n">graph</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">);</span> 
+
+<span class="c1">// updates edge from vertex i to j</span>
+<span class="kt">void</span> <span class="n">set_edge</span><span class="p">(</span><span class="n">graph_t</span><span class="o">*</span> <span class="n">graph</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">,</span> <span class="kt">double</span> <span class="n">time</span><span class="p">);</span> 
+  
+<textarea id="code-copy-5" class="code-copy-textarea" value="graph_t* create_graph(char* filename); // called once
+
+// returns a new heap object that is the shortest path from vertex i to j
+path_t* shortest(graph_t* graph, int i, int j); 
+
+// updates edge from vertex i to j
+void set_edge(graph_t* graph, int i, int j, double time); 
+  
+"></textarea></code></pre>
+<p>For performance, multiple threads must be able to call <code class="highlighter-rouge">shortest</code> at the same time but the graph can only be modified by one thread when no threads other are executing inside <code class="highlighter-rouge">shortest</code> or <code class="highlighter-rouge">set_edge</code>.</p>
+<p>Use mutex lock and condition variables to implement a reader-writer solution. An incomplete attempt is shown below. Though this attempt is threadsafe (thus sufficient for demo day!), it does not allow multiple threads to calculate <code class="highlighter-rouge">shortest</code> path at the same time and will not have sufficient throughput.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-6" onclick="onCopy(this);">Copy</a><span class="n">path_t</span><span class="o">*</span> <span class="nf">shortest_safe</span><span class="p">(</span><span class="n">graph_t</span><span class="o">*</span> <span class="n">graph</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+  <span class="n">path_t</span><span class="o">*</span> <span class="n">path</span> <span class="o">=</span> <span class="n">shortest</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">);</span>
+  <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">path</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">set_edge_safe</span><span class="p">(</span><span class="n">graph_t</span><span class="o">*</span> <span class="n">graph</span><span class="p">,</span> <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">,</span> <span class="kt">double</span> <span class="n">dist</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+  <span class="n">set_edge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">dist</span><span class="p">);</span>
+  <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-6" class="code-copy-textarea" value="path_t* shortest_safe(graph_t* graph, int i, int j) {
+  pthread_mutex_lock(&amp;amp;m);
+  path_t* path = shortest(graph, i, j);
+  pthread_mutex_unlock(&amp;amp;m);
+  return path;
+}
+void set_edge_safe(graph_t* graph, int i, int j, double dist) {
+  pthread_mutex_lock(&amp;amp;m);
+  set_edge(graph, i, j, dist);
+  pthread_mutex_unlock(&amp;amp;m);
+}
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/multi-threaded-programming-review-questions.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

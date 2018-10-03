@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Process Control, Part 1: Wait macros, using signals</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Process Control, Part 1: Wait macros, using signals
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Process-Control,-Part-1:-Wait-macros,-using-signals">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_can-i-find-out-the-exit-value-of-my-child" href="#can-i-find-out-the-exit-value-of-my-child" class="fancy-link">Can I find out the exit value of my child?</a></li>
+<li><a id="toc_bit-shifting" href="#bit-shifting" class="fancy-link">Bit Shifting</a></li>
+<li><a id="toc_being-careful" href="#being-careful" class="fancy-link">Being careful.</a></li>
+<li><a id="toc_whats-a-signal" href="#whats-a-signal" class="fancy-link">What’s a signal?</a></li>
+<li><a id="toc_when-are-signals-generated" href="#when-are-signals-generated" class="fancy-link">When are signals generated?</a></li>
+<li><a id="toc_can-i-pause-my-child" href="#can-i-pause-my-child" class="fancy-link">Can I pause my child?</a></li>
+<li><a id="toc_how-do-i-killstopsuspend-my-child-from-c" href="#how-do-i-killstopsuspend-my-child-from-c" class="fancy-link">How do I kill/stop/suspend my child from C?</a></li>
+<li><a id="toc_how-can-i-detect-ctrl-c-and-clean-up-gracefully" href="#how-can-i-detect-ctrl-c-and-clean-up-gracefully" class="fancy-link">How can I detect “CTRL-C” and clean up gracefully?</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="wait-macros">Wait Macros</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="can-i-find-out-the-exit-value-of-my-child" class="title-text">Can I find out the exit value of my child?<a class="anchor title-text" href="#can-i-find-out-the-exit-value-of-my-child">#</a>
+</h2></div>
+
+<p>You can find the lowest 8 bits of the child’s exit value (the return value of <code class="highlighter-rouge">main()</code> or value included in <code class="highlighter-rouge">exit()</code>): Use the “Wait macros” - typically you will use “WIFEXITED” and “WEXITSTATUS” . See <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/wait" class="fancy-link">wait</a></code>/<code class="highlighter-rouge"><a href="https://linux.die.net/man/3/waitpid" class="fancy-link">waitpid</a></code> man page for more information).</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">status</span><span class="p">;</span>
+<span class="n">pid_t</span> <span class="n">child</span> <span class="o">=</span> <span class="n">fork</span><span class="p">();</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">child</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// Failed</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">child</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="cm">/* I am the parent - wait for the child to finish */</span>
+    <span class="n">pid_t</span> <span class="n">pid</span> <span class="o">=</span> <span class="n">waitpid</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">status</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">WIFEXITED</span><span class="p">(</span><span class="n">status</span><span class="p">))</span> <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">low8bits</span> <span class="o">=</span> <span class="n">WEXITSTATUS</span><span class="p">(</span><span class="n">status</span><span class="p">);</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Process %d returned %d"</span> <span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">low8bits</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span> <span class="cm">/* I am the child */</span>
+    <span class="c1">// do something interesting</span>
+    <span class="n">execl</span><span class="p">(</span><span class="s">"/bin/ls"</span><span class="p">,</span> <span class="s">"/bin/ls"</span><span class="p">,</span> <span class="s">"."</span><span class="p">,</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="nb">NULL</span><span class="p">);</span> <span class="c1">// "ls ."</span>
+<span class="p">}</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value='int status;
+pid_t child = fork();
+if (child == -1) return 1; // Failed
+if (child &amp;gt; 0) { /* I am the parent - wait for the child to finish */
+    pid_t pid = waitpid(child, &amp;amp;status, 0);
+    if (pid != -1 &amp;amp;&amp;amp; WIFEXITED(status)) {
+        int low8bits = WEXITSTATUS(status);
+        printf("Process %d returned %d" , pid, low8bits);
+    }
+} else { /* I am the child */
+    // do something interesting
+    execl("/bin/ls", "/bin/ls", ".", (char *) NULL); // "ls ."
+}
+'></textarea></code></pre>
+
+<p>A process can only have 256 return values, the rest of the bits are informational.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="bit-shifting" class="title-text">Bit Shifting<a class="anchor title-text" href="#bit-shifting">#</a>
+</h2></div>
+
+<p>Note there is no need to memorize this, this is just a high level overview of how information is stored inside the status variables</p>
+
+<p>From Android source code:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="cm">/* If WIFEXITED(STATUS), the low-order 8 bits of the status. */</span>
+
+<span class="cp">#define __WEXITSTATUS(status) (((status) &amp; 0xff00) &gt;&gt; 8)
+</span>
+<span class="cm">/* If WIFSIGNALED(STATUS), the terminating signal. */</span>
+
+<span class="cp">#define __WTERMSIG(status) ((status) &amp; 0x7f)
+</span>
+<span class="cm">/* If WIFSTOPPED(STATUS), the signal that stopped the child. */</span>
+
+<span class="cp">#define __WSTOPSIG(status) __WEXITSTATUS(status)
+</span>
+<span class="cm">/* Nonzero if STATUS indicates normal termination. */</span>
+
+<span class="cp">#define __WIFEXITED(status) (__WTERMSIG(status) == 0)
+</span><textarea id="code-copy-1" class="code-copy-textarea" value="/* If WIFEXITED(STATUS), the low-order 8 bits of the status. */
+
+#define __WEXITSTATUS(status) (((status) &amp;amp; 0xff00) &amp;gt;&amp;gt; 8)
+
+/* If WIFSIGNALED(STATUS), the terminating signal. */
+
+#define __WTERMSIG(status) ((status) &amp;amp; 0x7f)
+
+/* If WIFSTOPPED(STATUS), the signal that stopped the child. */
+
+#define __WSTOPSIG(status) __WEXITSTATUS(status)
+
+/* Nonzero if STATUS indicates normal termination. */
+
+#define __WIFEXITED(status) (__WTERMSIG(status) == 0)
+"></textarea></code></pre>
+
+<p>The kernel has an internal way of keeping track of signaled, exited, or stopped. That API is abstracted so that that the kernel developers are free to change at will.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="being-careful" class="title-text">Being careful.<a class="anchor title-text" href="#being-careful">#</a>
+</h2></div>
+
+<p>Remember that the the macros only make sense if the precondition is met. Meaning that a process’ exit status won’t be defined if the process is signaled. The macros will not do the checking for you, so it’s up to the programming to make sure the logic checks out.</p>
+
+</div></div>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="signals">Signals</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="whats-a-signal" class="title-text">What’s a signal?<a class="anchor title-text" href="#whats-a-signal">#</a>
+</h2></div>
+
+<p>A signal is a construct provided to us by the kernel. It allows one process to asynchronously send a signal (think a message) to another process. If that process wants to accept the signal, it can, and then, for most signals, can decide what to do with that signal. Here is a short list (non comprehensive) of signals.</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Default Action</th>
+      <th>Usual Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SIGINT</td>
+      <td>Terminate Process (Can be caught)</td>
+      <td>Tell the process to stop nicely</td>
+    </tr>
+    <tr>
+      <td>SIGQUIT</td>
+      <td>Terminate Process (Can be caught)</td>
+      <td>Tells the process to stop harshly</td>
+    </tr>
+    <tr>
+      <td>SIGSTOP</td>
+      <td>Stop Process (Cannot be caught)</td>
+      <td>Stops the process to be continued</td>
+    </tr>
+    <tr>
+      <td>SIGCONT</td>
+      <td>Continues a Process</td>
+      <td>Continues to run the process</td>
+    </tr>
+    <tr>
+      <td>SIGKILL</td>
+      <td>Terminate Process (Cannot be caught)</td>
+      <td>You want your process gone</td>
+    </tr>
+  </tbody>
+</table>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="when-are-signals-generated" class="title-text">When are signals generated?<a class="anchor title-text" href="#when-are-signals-generated">#</a>
+</h2></div>
+
+<ul>
+  <li>When the user sends a signal. For example, you are at the terminal, and you send <code class="highlighter-rouge">CTRL-C</code>
+</li>
+  <li>When a system event happens. For example, you get a <code class="highlighter-rouge">SIGCHILD</code> after forking to notice when one of your children have exited.</li>
+  <li>When another program sends it. For example, when you execute <code class="highlighter-rouge">kill -9 PID</code>, it sends <code class="highlighter-rouge">SIGKILL</code>
+</li>
+  <li>When an appropriate hardware interrupt is triggered. For example, if you access a page that you aren’t supposed to, the hardware generates a segfault interrupt which gets intercepted by the kernel. The kernel finds the process that caused this and sends a software interrupt signal <code class="highlighter-rouge">SIGSEGV</code>.</li>
+</ul>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="can-i-pause-my-child" class="title-text">Can I pause my child?<a class="anchor title-text" href="#can-i-pause-my-child">#</a>
+</h2></div>
+
+<p>Yes ! You can temporarily pause a running process by sending it a SIGSTOP signal.
+If it succeeds it will freeze a process; i.e. the process will not be allocated any more CPU time.</p>
+
+<p>To allow a process to resume execution send it the SIGCONT signal.</p>
+
+<p>For example,
+Here’s program that slowly prints a dot every second, up to 59 dots.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="cp">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+</span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"My pid is %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">getpid</span><span class="p">());</span>
+    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">60</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="o">--</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span> 
+        <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">"."</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">"Done!"</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value='#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+int main() {
+    printf("My pid is %d\n", getpid());
+    int i = 60;
+    while (--i) { 
+        write(1, ".", 1);
+        sleep(1);
+    }
+    write(1, "Done!", 5);
+    return 0;
+}
+'></textarea></code></pre>
+<p>We will first start the process in the background (notice the &amp; at the end).
+Then send it a signal from the shell process by using the kill command.</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;./program &amp;
+My pid is 403
+...
+&gt;kill -SIGSTOP 403
+&gt;kill -SIGCONT 403
+</code></pre></div></div>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-do-i-killstopsuspend-my-child-from-c" class="title-text">How do I kill/stop/suspend my child from C?<a class="anchor title-text" href="#how-do-i-killstopsuspend-my-child-from-c">#</a>
+</h2></div>
+<p>In C, send a signal to the child using <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/kill" class="fancy-link">kill</a></code> POSIX call,</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="n">kill</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">SIGUSR1</span><span class="p">);</span> <span class="c1">// Send a user-defined signal</span>
+<span class="n">kill</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">SIGSTOP</span><span class="p">);</span> <span class="c1">// Stop the child process (the child cannot prevent this)</span>
+<span class="n">kill</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">SIGTERM</span><span class="p">);</span> <span class="c1">// Terminate the child process (the child can prevent this)</span>
+<span class="n">kill</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">SIGINT</span><span class="p">);</span> <span class="c1">// Equivalent to CTRL-C (by default closes the process)</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="kill(child, SIGUSR1); // Send a user-defined signal
+kill(child, SIGSTOP); // Stop the child process (the child cannot prevent this)
+kill(child, SIGTERM); // Terminate the child process (the child can prevent this)
+kill(child, SIGINT); // Equivalent to CTRL-C (by default closes the process)
+"></textarea></code></pre>
+
+<p>As we saw above there is also a kill command available in the shell
+e.g. get a list of running processes and then terminate process 45 and process 46</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ps
+kill -l 
+kill -9 45
+kill -s TERM 46
+</code></pre></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-can-i-detect-ctrl-c-and-clean-up-gracefully" class="title-text">How can I detect “CTRL-C” and clean up gracefully?<a class="anchor title-text" href="#how-can-i-detect-ctrl-c-and-clean-up-gracefully">#</a>
+</h2></div>
+
+<p>We will return to signals later on - this is just a short introduction. On a Linux system, see <code class="highlighter-rouge">man -s7 signal</code> if you are interested in finding out more (for example a list of system and library calls that are async-signal-safe).</p>
+
+<p>There are strict limitations on the executable code inside a signal handler. Most library and system calls are not ‘async-signal-safe’ - they may not be used inside a signal handler because they are not re-entrant safe. In a single-threaded program, signal handling momentarily interrupts the program execution to execute the signal handler code instead. Suppose your original program was interrupted while executing the library code of <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/malloc" class="fancy-link">malloc</a></code> ;  the memory structures used by malloc will not be in a consistent state. Calling <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/printf" class="fancy-link">printf</a></code> (which uses <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/malloc" class="fancy-link">malloc</a></code>) as part of the signal handler is unsafe and will result in “undefined behavior” i.e. it is no longer a useful,predictable program. In practice your program might crash, compute or generate incorrect results or stop functioning (“deadlock”), depending on exactly what your program was executing when it was interrupted to execute the signal handler code.</p>
+
+<p>One common use of signal handlers is to set a boolean flag that is occasionally polled (read) as part of the normal running of the program. For example,</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-4" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">pleaseStop</span><span class="p">;</span> <span class="c1">// See notes on why "volatile sig_atomic_t" is better</span>
+
+<span class="kt">void</span> <span class="nf">handle_sigint</span><span class="p">(</span><span class="kt">int</span> <span class="n">signal</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">pleaseStop</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">signal</span><span class="p">(</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">handle_sigint</span><span class="p">);</span>
+    <span class="n">pleaseStop</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="o">!</span> <span class="n">pleaseStop</span><span class="p">)</span> <span class="p">{</span> 
+        <span class="cm">/* application logic here */</span> 
+    <span class="p">}</span>
+    <span class="cm">/* cleanup code here */</span>
+<span class="p">}</span>
+<textarea id="code-copy-4" class="code-copy-textarea" value='int pleaseStop; // See notes on why "volatile sig_atomic_t" is better
+
+void handle_sigint(int signal) {
+    pleaseStop = 1;
+}
+
+int main() {
+    signal(SIGINT, handle_sigint);
+    pleaseStop = 0;
+    while (! pleaseStop) { 
+        /* application logic here */ 
+    }
+    /* cleanup code here */
+}
+'></textarea></code></pre>
+
+<p>The above code might appear to be correct on paper. However, we need to provide a hint to the compiler and to the CPU core that will execute the <code class="highlighter-rouge">main()</code> loop. We need to prevent a compiler optimization: The expression <code class="highlighter-rouge">! pleaseStop</code> appears to be a loop invariant i.e. true forever, so can be simplified to <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/true" class="fancy-link">true</a></code>.  Secondly, we need to ensure that the value of <code class="highlighter-rouge">pleaseStop</code> is not cached using a CPU register and instead always read from and written to main memory. The <code class="highlighter-rouge">sig_atomic_t</code> type implies that all the bits of the variable can be read or modified as an “atomic operation” - a single uninterruptable operation. It is impossible to read a value that is composed of some new bit values and old bit values.</p>
+
+<p>By specifying <code class="highlighter-rouge">pleaseStop</code> with the correct type <code class="highlighter-rouge">volatile sig_atomic_t</code> we can write portable code where the main loop will be exited after the signal handler returns. The <code class="highlighter-rouge">sig_atomic_t</code> type can be as large as an <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/int" class="fancy-link">int</a></code> on most modern platforms but on embedded systems can be as small as a <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/char" class="fancy-link">char</a></code> and only able to represent (-127 to 127) values.</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-5" onclick="onCopy(this);">Copy</a><span class="k">volatile</span> <span class="kt">sig_atomic_t</span> <span class="n">pleaseStop</span><span class="p">;</span>
+<textarea id="code-copy-5" class="code-copy-textarea" value="volatile sig_atomic_t pleaseStop;
+"></textarea></code></pre>
+<p>Two examples of this pattern can be found in “COMP” a terminal based 1Hz 4bit computer (https://github.com/gto76/comp-cpp/blob/1bf9a77eaf8f57f7358a316e5bbada97f2dc8987/src/output.c#L121).
+Two boolean flags are used. One to mark the delivery of <code class="highlighter-rouge">SIGINT</code> (CTRL-C), and gracefully shutdown the program, and the other to mark <code class="highlighter-rouge">SIGWINCH</code> signal to detect terminal resize and redraw the entire display.</p>
+
+<div align="center">
+<a href="/wikibook/_edit.html#" class="fancy-link wiki-link">
+Back: Forking, Part 2: Fork, Exec, Wait
+</a> |
+<a href="/wikibook/processes-review-questions.html#" class="fancy-link wiki-link">
+Next: Processes Review Questions
+</a>
+</div>
+</div></div>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/process-control-part-1-wait-macros-using-signals.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Pipes, Part 1: Introduction to pipes</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Pipes, Part 1: Introduction to pipes
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Pipes,-Part-1:-Introduction-to-pipes">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_what-is-ipc" href="#what-is-ipc" class="fancy-link">What is IPC?</a></li>
+<li><a id="toc_what-is-a-pipe" href="#what-is-a-pipe" class="fancy-link">What is a pipe?</a></li>
+<li><a id="toc_how-can-i-use-pipe-to-communicate-with-a-child-process" href="#how-can-i-use-pipe-to-communicate-with-a-child-process" class="fancy-link">How can I use pipe to communicate with a child process?</a></li>
+<li><a id="toc_can-i-use-pipes-inside-a-single-process" href="#can-i-use-pipes-inside-a-single-process" class="fancy-link">Can I use pipes inside a single process?</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+<div class="title"><h2 id="what-is-ipc" class="title-text">What is IPC?<a class="anchor title-text" href="#what-is-ipc">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Inter process communication is any way for one process to talk to another process. You’ve already seen one form of this virtual memory! A piece of virtual memory can be shared between parent and child, leading to communication. You may want to wrap that memory in <code class="highlighter-rouge">pthread_mutexattr_setpshared(&amp;attrmutex, PTHREAD_PROCESS_SHARED);</code> mutex (or a process wide mutex) to prevent race conditions.</p>
+<p>There are more standard ways of IPC, like pipes! Consider if you type the following into your terminal</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-1</span> | <span class="nb">cut</span> <span class="nt">-d</span><span class="s1">'.'</span> <span class="nt">-f1</span> | <span class="nb">uniq</span> | <span class="nb">sort</span> | <span class="nb">tee </span>dir_contents
+</code></pre></div></div>
+<p>What does the following code do (It doesn’t really matter so you can skip this if you want)? Well it <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/ls" class="fancy-link">ls</a></code>’s the current directory (the -1 means that it outputs one entry per line). The <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/cut" class="fancy-link">cut</a></code> command then takes everything before the first period. Uniq makes sure all the lines are uniq, sort sorts them and tee outputs to a file.</p>
+<p>The important part is that bash creates <strong>5 separate processes</strong> and connects their standard outs/stdins with pipes the trail looks something like this.</p>
+<p>(0) ls (1)——&gt;(0) cut (1)——-&gt;(0) uniq (1)——&gt;(0) sort (1)——&gt;(0) tee (1)</p>
+<p>The numbers in the pipes are the file descriptors for each process and the arrow represents the redirect or where the output of the pipe is going.</p>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="what-is-a-pipe" class="title-text">What is a pipe?<a class="anchor title-text" href="#what-is-a-pipe">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>A POSIX pipe is almost like its real counterpart - you can stuff bytes down one end and they will appear at the other end in the same order. Unlike real pipes however, the flow is always in the same direction, one file descriptor is used for reading and the other for writing. The <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pipe" class="fancy-link">pipe</a></code> system call is used to create a pipe.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">filedes</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="n">pipe</span> <span class="p">(</span><span class="n">filedes</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"read from %d, write to %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">filedes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">filedes</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value='int filedes[2];
+pipe (filedes);
+printf("read from %d, write to %d\n", filedes[0], filedes[1]);
+'></textarea></code></pre>
+<p>These file descriptors can be used with <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/read" class="fancy-link">read</a></code> -</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="c1">// To read...</span>
+<span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">80</span><span class="p">];</span>
+<span class="kt">int</span> <span class="n">bytesread</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">filedes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+<textarea id="code-copy-1" class="code-copy-textarea" value="// To read...
+char buffer[80];
+int bytesread = read(filedes[0], buffer, sizeof(buffer));
+"></textarea></code></pre>
+<p>And <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/write" class="fancy-link">write</a></code> -</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="n">write</span><span class="p">(</span><span class="n">filedes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">"Go!"</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value='write(filedes[1], "Go!", 4);
+'></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-can-i-use-pipe-to-communicate-with-a-child-process" class="title-text">How can I use pipe to communicate with a child process?<a class="anchor title-text" href="#how-can-i-use-pipe-to-communicate-with-a-child-process">#</a>
+</h2></div>
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>A common method of using pipes is to create the pipe before forking.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">filedes</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="n">pipe</span> <span class="p">(</span><span class="n">filedes</span><span class="p">);</span>
+<span class="n">pid_t</span> <span class="n">child</span> <span class="o">=</span> <span class="n">fork</span><span class="p">();</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">child</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="cm">/* I must be the parent */</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">80</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">bytesread</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">filedes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+    <span class="c1">// do something with the bytes read    </span>
+<span class="p">}</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="int filedes[2];
+pipe (filedes);
+pid_t child = fork();
+if (child &amp;gt; 0) { /* I must be the parent */
+    char buffer[80];
+    int bytesread = read(filedes[0], buffer, sizeof(buffer));
+    // do something with the bytes read    
+}
+"></textarea></code></pre>
+<p>The child can then send a message back to the parent:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-4" onclick="onCopy(this);">Copy</a><span class="k">if</span> <span class="p">(</span><span class="n">child</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+   <span class="n">write</span><span class="p">(</span><span class="n">filedes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">"done"</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-4" class="code-copy-textarea" value='if (child == 0) {
+   write(filedes[1], "done", 4);
+}
+'></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="can-i-use-pipes-inside-a-single-process" class="title-text">Can I use pipes inside a single process?<a class="anchor title-text" href="#can-i-use-pipes-inside-a-single-process">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Short answer: Yes, but I’m not sure why you would want to LOL!</p>
+<p>Here’s an example program that sends a message to itself:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-5" onclick="onCopy(this);">Copy</a><span class="cp">#include &lt;unistd.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">fh</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="n">pipe</span><span class="p">(</span><span class="n">fh</span><span class="p">);</span>
+    <span class="kt">FILE</span> <span class="o">*</span><span class="n">reader</span> <span class="o">=</span> <span class="n">fdopen</span><span class="p">(</span><span class="n">fh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">"r"</span><span class="p">);</span>
+    <span class="kt">FILE</span> <span class="o">*</span><span class="n">writer</span> <span class="o">=</span> <span class="n">fdopen</span><span class="p">(</span><span class="n">fh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">"w"</span><span class="p">);</span>
+    <span class="c1">// Hurrah now I can use printf rather than using low-level read() write()</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Writing...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span><span class="s">"%d %d %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">);</span>
+    <span class="n">fflush</span><span class="p">(</span><span class="n">writer</span><span class="p">);</span>
+    
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Reading...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">results</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">ok</span> <span class="o">=</span> <span class="n">fscanf</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span><span class="s">"%d %d %d"</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">results</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">results</span> <span class="o">+</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%d values parsed: %d %d %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">ok</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+    
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-5" class="code-copy-textarea" value='#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+
+int main() {
+    int fh[2];
+    pipe(fh);
+    FILE *reader = fdopen(fh[0], "r");
+    FILE *writer = fdopen(fh[1], "w");
+    // Hurrah now I can use printf rather than using low-level read() write()
+    printf("Writing...\n");
+    fprintf(writer,"%d %d %d\n", 10, 20, 30);
+    fflush(writer);
+    
+    printf("Reading...\n");
+    int results[3];
+    int ok = fscanf(reader,"%d %d %d", results, results + 1, results + 2);
+    printf("%d values parsed: %d %d %d\n", ok, results[0], results[1], results[2]);
+    
+    return 0;
+}
+'></textarea></code></pre>
+<p>The problem with using a pipe in this fashion is that writing to a pipe can block i.e. the pipe only has a limited buffering capacity. If the pipe is full the writing process will block! The maximum size of the buffer is system dependent; typical values from  4KB upto 128KB.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-6" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">fh</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="n">pipe</span><span class="p">(</span><span class="n">fh</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="cp">#define MESG "..............................."
+</span>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">b</span><span class="p">);</span>
+        <span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">MESG</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">MESG</span><span class="p">))</span>
+        <span class="n">b</span><span class="o">+=</span><span class="k">sizeof</span><span class="p">(</span><span class="n">MESG</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-6" class="code-copy-textarea" value='int main() {
+    int fh[2];
+    pipe(fh);
+    int b = 0;
+    #define MESG "..............................."
+    while(1) {
+        printf("%d\n",b);
+        write(fh[1], MESG, sizeof(MESG))
+        b+=sizeof(MESG);
+    }
+    return 0;
+}
+'></textarea></code></pre>
+<p>See <a class="fancy-link wiki-link" href="./pipes-part-2-pipe-programming-secrets.html">Pipes, Part 2: Pipe programming secrets</a></p>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/pipes-part-1-introduction-to-pipes.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>C Programming, Part 3: Common Gotchas</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              C Programming, Part 3: Common Gotchas
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//C-Programming,-Part-3:-Common-Gotchas">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_string-constants-are-read-only" href="#string-constants-are-read-only" class="fancy-link">String Constants are Read-Only</a></li>
+<li><a id="toc_buffer-overflow--underflow" href="#buffer-overflow--underflow" class="fancy-link">Buffer Overflow / Underflow</a></li>
+<li><a id="toc_handling-pointers-to-out-of-scope-automatic-variables" href="#handling-pointers-to-out-of-scope-automatic-variables" class="fancy-link">Handling Pointers to Out-of-Scope Automatic Variables</a></li>
+<li><a id="toc_sizeoftype--versus-sizeoftype" href="#sizeoftype--versus-sizeoftype" class="fancy-link"><code class="highlighter-rouge">sizeof(type *)</code> versus <code class="highlighter-rouge">sizeof(type)</code></a></li>
+<li><a id="toc_strings-require-strlens1-bytes" href="#strings-require-strlens1-bytes" class="fancy-link">Strings Require <code class="highlighter-rouge">strlen(s)+1</code> Bytes</a></li>
+<li><a id="toc_failing-to-initialize-memory" href="#failing-to-initialize-memory" class="fancy-link">Failing to Initialize Memory</a></li>
+<li><a id="toc_double-free" href="#double-free" class="fancy-link">Double-free</a></li>
+<li><a id="toc_dangling-pointers" href="#dangling-pointers" class="fancy-link">Dangling Pointers</a></li>
+<li><a id="toc_forgetting-to-copy-getline-buffer" href="#forgetting-to-copy-getline-buffer" class="fancy-link">Forgetting to Copy <code class="highlighter-rouge">getline</code> Buffer</a></li>
+<li><a id="toc_forgetting-break-after-case" href="#forgetting-break-after-case" class="fancy-link">Forgetting <code class="highlighter-rouge">break</code> after <code class="highlighter-rouge">case</code></a></li>
+<li><a id="toc_assignment-vs-equality-check" href="#assignment-vs-equality-check" class="fancy-link">Assignment vs Equality Check</a></li>
+<li><a id="toc_undeclared-or-incorrectly-prototyped-functions" href="#undeclared-or-incorrectly-prototyped-functions" class="fancy-link">Undeclared or Incorrectly Prototyped Functions</a></li>
+<li><a id="toc_extra-semicolons" href="#extra-semicolons" class="fancy-link">Extra Semicolons</a></li>
+<li><a id="toc_c-preprocessor-macros-and-precedence" href="#c-preprocessor-macros-and-precedence" class="fancy-link">C Preprocessor macros and precedence</a></li>
+<li><a id="toc_c-preprocessor-macros-and-side-effects" href="#c-preprocessor-macros-and-side-effects" class="fancy-link">C Preprocessor Macros and Side-Effects</a></li>
+<li><a id="toc_sizeoftype-vs-sizeoftype-" href="#sizeoftype-vs-sizeoftype-" class="fancy-link"><code class="highlighter-rouge">sizeof(type[])</code> vs <code class="highlighter-rouge">sizeof(type *)</code></a></li>
+<li><a id="toc_sizeof-and-side-effects" href="#sizeof-and-side-effects" class="fancy-link"><code class="highlighter-rouge">sizeof</code> and Side-Effects</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<p>What common mistakes do C programmers make?</p>
+
+<div class="pad"><div class="card">
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="memory-mistakes">Memory Mistakes</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="string-constants-are-read-only" class="title-text">String Constants are Read-Only<a class="anchor title-text" href="#string-constants-are-read-only">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="kt">char</span> <span class="n">array</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"Hi!"</span><span class="p">;</span> <span class="c1">// array contains a mutable copy </span>
+<span class="n">strcpy</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="s">"OK"</span><span class="p">);</span>
+
+<span class="kt">char</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="s">"Can't change me"</span><span class="p">;</span> <span class="c1">// ptr points to some immutable memory</span>
+<span class="n">strcpy</span><span class="p">(</span><span class="n">ptr</span><span class="p">,</span> <span class="s">"Will not work"</span><span class="p">);</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value="char array[] = &quot;Hi!&quot;; // array contains a mutable copy 
+strcpy(array, &quot;OK&quot;);
+
+char *ptr = &quot;Can't change me&quot;; // ptr points to some immutable memory
+strcpy(ptr, &quot;Will not work&quot;);
+"></textarea></code></pre>
+<p>String literals are character arrays stored in the code segment of the program, which is immutable. Two string literals may share the same space in memory. An example follows:</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="kt">char</span> <span class="o">*</span><span class="n">str1</span> <span class="o">=</span> <span class="s">"Brandon Chong is the best TA"</span><span class="p">;</span>
+<span class="kt">char</span> <span class="o">*</span><span class="n">str2</span> <span class="o">=</span> <span class="s">"Brandon Chong is the best TA"</span><span class="p">;</span>
+<span class="n">str1</span> <span class="o">==</span> <span class="n">str2</span><span class="p">;</span> <span class="c1">// true</span>
+<textarea id="code-copy-1" class="code-copy-textarea" value='char *str1 = "Brandon Chong is the best TA";
+char *str2 = "Brandon Chong is the best TA";
+str1 == str2; // true
+'></textarea></code></pre>
+<p>The strings pointed to by <code class="highlighter-rouge">str1</code> and <code class="highlighter-rouge">str2</code> may actually reside in the same location in memory.</p>
+
+<p>Char arrays, however, contain deep copies of string literals assigned to them, and different arrays represent different memory locations. These following char arrays do not reside in the same place in memory.</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="kt">char</span> <span class="n">arr1</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"Brandon Chong didn't write this"</span><span class="p">;</span>
+<span class="kt">char</span> <span class="n">arr2</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"Brandon Chong didn't write this"</span><span class="p">;</span>
+<span class="n">arr1</span> <span class="o">==</span> <span class="n">arr2</span><span class="p">;</span>         <span class="c1">// false</span>
+<span class="o">&amp;</span><span class="n">arr1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">arr2</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="c1">// false</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value="char arr1[] = &quot;Brandon Chong didn't write this&quot;;
+char arr2[] = &quot;Brandon Chong didn't write this&quot;;
+arr1 == arr2;         // false
+&amp;amp;arr1[0] == &amp;amp;arr2[0]; // false
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="buffer-overflow--underflow" class="title-text">Buffer Overflow / Underflow<a class="anchor title-text" href="#buffer-overflow--underflow">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">array</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="k">for</span> <span class="p">(;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">--</span><span class="p">)</span> <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="int i = 10, array[10];
+for (; i &amp;gt;= 0; i--) array[i] = i;
+"></textarea></code></pre>
+<p>C does not perform bounds-checking on array accesses. The above example writes into <code class="highlighter-rouge">array[10]</code> which is outside the array bounds. This can corrupt other variables on the stack as well as the very implementation of the call stack, exposing your program to attacks from hackers. In practice, these overflows often result from using unsafe library calls or putting the wrong size limit on a safer library call.</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-4" onclick="onCopy(this);">Copy</a><span class="n">gets</span><span class="p">(</span><span class="n">array</span><span class="p">);</span> <span class="c1">// Let's hope the input is shorter than my array! (NEVER use gets)</span>
+<span class="n">fgets</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="mi">4096</span><span class="p">,</span> <span class="n">stdin</span><span class="p">);</span> <span class="c1">// Whoops </span>
+<textarea id="code-copy-4" class="code-copy-textarea" value="gets(array); // Let's hope the input is shorter than my array! (NEVER use gets)
+fgets(array, 4096, stdin); // Whoops 
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="handling-pointers-to-out-of-scope-automatic-variables" class="title-text">Handling Pointers to Out-of-Scope Automatic Variables<a class="anchor title-text" href="#handling-pointers-to-out-of-scope-automatic-variables">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-5" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="o">*</span><span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+    <span class="k">static</span> <span class="kt">int</span> <span class="n">imok</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+    <span class="p">{</span>
+      <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">result</span><span class="p">;</span>
+      <span class="n">p</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//imok = *p;      // Not OK: x has already gone out of scope</span>
+    <span class="c1">//return &amp;result; // Not OK: result will go out of scope after the function returns </span>
+    <span class="k">return</span> <span class="o">&amp;</span><span class="n">imok</span><span class="p">;</span>     <span class="c1">// OK - static variables are not on the stack</span>
+<span class="p">}</span>
+<textarea id="code-copy-5" class="code-copy-textarea" value="int *f() {
+    int result = 42;
+    static int imok;
+    int *p;
+    {
+      int x = result;
+      p = &amp;amp;x;
+    }
+    //imok = *p;      // Not OK: x has already gone out of scope
+    //return &amp;amp;result; // Not OK: result will go out of scope after the function returns 
+    return &amp;amp;imok;     // OK - static variables are not on the stack
+}
+"></textarea></code></pre>
+<p>Automatic variables are bound to stack memory only as long as they are in scope. After they go out of scope, the data stored at their memory addresses becomes undefined. Static variables reside in the data segment, which is safe to access even when those variables are not in scope.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="sizeoftype--versus-sizeoftype" class="title-text">
+<code class="highlighter-rouge">sizeof(type *)</code> versus <code class="highlighter-rouge">sizeof(type)</code><a class="anchor title-text" href="#sizeoftype--versus-sizeoftype">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-6" onclick="onCopy(this);">Copy</a><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
+   <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+<span class="p">};</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">User</span> <span class="n">user_t</span><span class="p">;</span>
+
+<span class="n">user_t</span> <span class="o">*</span><span class="n">user</span> <span class="o">=</span> <span class="p">(</span><span class="n">user_t</span> <span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span> <span class="p">(</span><span class="n">user_t</span> <span class="o">*</span><span class="p">));</span>
+<textarea id="code-copy-6" class="code-copy-textarea" value="struct User {
+   char name[100];
+};
+typedef struct User user_t;
+
+user_t *user = (user_t *) malloc(sizeof (user_t *));
+"></textarea></code></pre>
+<p>In the above example, we needed to allocate enough bytes for the struct. Instead, we allocated enough bytes to hold a pointer. Writing to the user pointer might corrupt the heap. The correct code is shown below.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-7" onclick="onCopy(this);">Copy</a><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
+   <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+<span class="p">};</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">User</span> <span class="n">user_t</span><span class="p">;</span>
+
+<span class="n">user_t</span> <span class="o">*</span><span class="n">user</span> <span class="o">=</span> <span class="p">(</span><span class="n">user_t</span> <span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span> <span class="p">(</span><span class="n">user_t</span><span class="p">));</span>
+<textarea id="code-copy-7" class="code-copy-textarea" value="struct User {
+   char name[100];
+};
+typedef struct User user_t;
+
+user_t *user = (user_t *) malloc(sizeof (user_t));
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="strings-require-strlens1-bytes" class="title-text">Strings Require <code class="highlighter-rouge">strlen(s)+1</code> Bytes<a class="anchor title-text" href="#strings-require-strlens1-bytes">#</a>
+</h2></div>
+
+<p>Every string must have a null byte after the last actual character. To store the string <code>"Hi"</code> it takes 3 bytes: <code>[H] [i] [\0]</code>.</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-8" onclick="onCopy(this);">Copy</a><span class="kt">char</span> <span class="o">*</span><span class="nf">strdup</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">input</span><span class="p">)</span> <span class="p">{</span>     <span class="cm">/* return a copy of 'input' */</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">copy</span><span class="p">;</span>
+    <span class="n">copy</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">));</span>   <span class="cm">/* nope! this allocates space for a pointer, not a string */</span>
+    <span class="n">copy</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">strlen</span><span class="p">(</span><span class="n">input</span><span class="p">));</span>     <span class="cm">/* Almost...but what about the null terminator? */</span>
+    <span class="n">copy</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">strlen</span><span class="p">(</span><span class="n">input</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span> <span class="cm">/* That's right. */</span>
+    <span class="n">strcpy</span><span class="p">(</span><span class="n">copy</span><span class="p">,</span> <span class="n">input</span><span class="p">);</span>              <span class="cm">/* strcpy will provide the null terminator */</span>
+    <span class="k">return</span> <span class="n">copy</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-8" class="code-copy-textarea" value="char *strdup(const char *input) {     /* return a copy of 'input' */
+    char *copy;
+    copy = malloc(sizeof (char *));   /* nope! this allocates space for a pointer, not a string */
+    copy = malloc(strlen(input));     /* Almost...but what about the null terminator? */
+    copy = malloc(strlen(input) + 1); /* That's right. */
+    strcpy(copy, input);              /* strcpy will provide the null terminator */
+    return copy;
+}
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="failing-to-initialize-memory" class="title-text">Failing to Initialize Memory<a class="anchor title-text" href="#failing-to-initialize-memory">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-9" onclick="onCopy(this);">Copy</a><span class="kt">void</span> <span class="nf">myfunct</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">array</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-9" class="code-copy-textarea" value='void myfunct() {
+    char array[10];
+    char *p = malloc(10);
+    printf("%s %s\n", array, p);
+}
+'></textarea></code></pre>
+<p>Automatic (stack) variables and heap memory obtained with <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/malloc" class="fancy-link">malloc</a></code> are not initialized to zero by default. The function above results in undefined behavior.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="double-free" class="title-text">Double-free<a class="anchor title-text" href="#double-free">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-10" onclick="onCopy(this);">Copy</a><span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+<span class="n">free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="c1">//  .. later ...</span>
+<span class="n">free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> 
+<textarea id="code-copy-10" class="code-copy-textarea" value="char *p = malloc(10);
+free(p);
+//  .. later ...
+free(p); 
+"></textarea></code></pre>
+<p>It is an error to free the same heap memory twice.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="dangling-pointers" class="title-text">Dangling Pointers<a class="anchor title-text" href="#dangling-pointers">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-11" onclick="onCopy(this);">Copy</a><span class="kt">char</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+<span class="n">strcpy</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s">"Hello"</span><span class="p">);</span>
+<span class="n">free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="c1">//  .. later ...</span>
+<span class="n">strcpy</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="s">"World"</span><span class="p">);</span> 
+<textarea id="code-copy-11" class="code-copy-textarea" value='char *p = malloc(10);
+strcpy(p, "Hello");
+free(p);
+//  .. later ...
+strcpy(p,"World"); 
+'></textarea></code></pre>
+<p>Accessing freed memory results in undefined behavior. A defensive programming practice is to set pointers to NULL as soon as the memory is freed, since there is no other way to reliably check if a pointer points to a valid address. The following macro accomplishes this.</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-12" onclick="onCopy(this);">Copy</a><span class="cp">#define safer_free(p) {free(p); (p) = NULL;}
+</span><textarea id="code-copy-12" class="code-copy-textarea" value="#define safer_free(p) {free(p); (p) = NULL;}
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="forgetting-to-copy-getline-buffer" class="title-text">Forgetting to Copy <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getline" class="fancy-link">getline</a></code> Buffer<a class="anchor title-text" href="#forgetting-to-copy-getline-buffer">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-13" onclick="onCopy(this);">Copy</a><span class="cp">#include &lt;stdio.h&gt;
+</span>  
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">void</span><span class="p">){</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">line</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+  <span class="kt">size_t</span> <span class="n">linecap</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">strings</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+
+  <span class="c1">// assume stdin contains "1\n2\n\3\n"</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">strings</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">getline</span><span class="p">(</span><span class="o">&amp;</span><span class="n">line</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">linecap</span><span class="p">,</span> <span class="n">stdin</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">line</span> <span class="o">:</span> <span class="s">""</span><span class="p">;</span>
+
+  <span class="c1">// this prints out "3\n3\n\3" instead of "3\n\2\n1\n"</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="n">i</span><span class="o">--</span><span class="p">;)</span> <span class="c1">// i=2,1,0</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span> <span class="n">strings</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="p">}</span>
+<textarea id="code-copy-13" class="code-copy-textarea" value='#include &amp;lt;stdio.h&amp;gt;
+  
+int main(void){
+  char *line = NULL;
+  size_t linecap = 0;
+  char *strings[3];
+
+  // assume stdin contains "1\n2\n\3\n"
+  for (size_t i = 0; i &amp;lt; 3; ++i)
+    strings[i] = getline(&amp;amp;line, &amp;amp;linecap, stdin) &amp;gt;= 0 ? line : "";
+
+  // this prints out "3\n3\n\3" instead of "3\n\2\n1\n"
+  for (size_t i = 3; i--;) // i=2,1,0
+    printf("%s", strings[i]);
+}
+'></textarea></code></pre>
+<p>Since <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/getline" class="fancy-link">getline</a></code> reuses a buffer, all pointers in the <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/strings" class="fancy-link">strings</a></code> array are actually pointing to the same memory. We can fix this by setting the assignment of <code class="highlighter-rouge">strings[i]</code> to a deep copy of the buffer.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-14" onclick="onCopy(this);">Copy</a>   <span class="n">strings</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">getline</span><span class="p">(</span><span class="o">&amp;</span><span class="n">line</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">linecap</span><span class="p">,</span> <span class="n">stdin</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">strdup</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">:</span> <span class="s">""</span><span class="p">;</span>
+<textarea id="code-copy-14" class="code-copy-textarea" value='   strings[i] = getline(&amp;amp;line, &amp;amp;linecap, stdin) &amp;gt;= 0 ? strdup(line) : "";
+'></textarea></code></pre>
+<p>Fun fact: providing “1\n123456789abcdef\n3\n” to the broken version of the program might cause it to print out “3\n3\n1\n” instead of “3\n3\n3\n”. Now why might that be? 
+<em>Hint: use Valgrind</em></p>
+
+</div></div>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="logic-and-program-flow-mistakes">Logic and Program Flow Mistakes</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="forgetting-break-after-case" class="title-text">Forgetting <code class="highlighter-rouge"><a href="https://linux.die.net/man/2/break" class="fancy-link">break</a></code> after <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/case" class="fancy-link">case</a></code><a class="anchor title-text" href="#forgetting-break-after-case">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-15" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">flag</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// Will print all three lines.</span>
+<span class="k">switch</span> <span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="p">{</span>
+<span class="k">case</span> <span class="mi">1</span><span class="p">:</span> <span class="n">printf</span><span class="p">(</span><span class="s">"I'm printed</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="k">case</span> <span class="mi">2</span><span class="p">:</span> <span class="n">printf</span><span class="p">(</span><span class="s">"Me too</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="k">case</span> <span class="mi">3</span><span class="p">:</span> <span class="n">printf</span><span class="p">(</span><span class="s">"Me three</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-15" class="code-copy-textarea" value="int flag = 1; // Will print all three lines.
+switch (flag) {
+case 1: printf(&quot;I'm printed\n&quot;);
+case 2: printf(&quot;Me too\n&quot;);
+case 3: printf(&quot;Me three\n&quot;);
+}
+"></textarea></code></pre>
+<p>Case statements without a break will just continue onto the code of the next case statement. The correct code is shown below. The break for the last statement is unnecessary because there are no more cases to be executed after the last one.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-16" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">flag</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// Will print only "I'm printed\n"</span>
+<span class="k">switch</span> <span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="p">{</span>
+<span class="k">case</span> <span class="mi">1</span><span class="p">:</span> 
+    <span class="n">printf</span><span class="p">(</span><span class="s">"I'm printed</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">break</span><span class="p">;</span>
+<span class="k">case</span> <span class="mi">2</span><span class="p">:</span> 
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Me too</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">break</span><span class="p">;</span>
+<span class="k">case</span> <span class="mi">3</span><span class="p">:</span> 
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Me three</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">break</span><span class="p">;</span> <span class="c1">//unnecessary</span>
+<span class="p">}</span>
+<textarea id="code-copy-16" class="code-copy-textarea" value="int flag = 1; // Will print only &quot;I'm printed\n&quot;
+switch (flag) {
+case 1: 
+    printf(&quot;I'm printed\n&quot;);
+    break;
+case 2: 
+    printf(&quot;Me too\n&quot;);
+    break;
+case 3: 
+    printf(&quot;Me three\n&quot;);
+    break; //unnecessary
+}
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="assignment-vs-equality-check" class="title-text">Assignment vs Equality Check<a class="anchor title-text" href="#assignment-vs-equality-check">#</a>
+</h2></div>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-17" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">answer</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// Will print out the answer.</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">answer</span> <span class="o">=</span> <span class="mi">42</span><span class="p">)</span> <span class="p">{</span> <span class="n">printf</span><span class="p">(</span><span class="s">"I've solved the answer! It's %d"</span><span class="p">,</span> <span class="n">answer</span><span class="p">);</span> <span class="p">}</span>
+<textarea id="code-copy-17" class="code-copy-textarea" value="int answer = 3; // Will print out the answer.
+if (answer = 42) { printf(&quot;I've solved the answer! It's %d&quot;, answer); }
+"></textarea></code></pre>
+<p>Compilers will usually warn you about this mistake. If you really want to perform an assignment, add an extra pair of parentheses to suppress these warnings.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-18" onclick="onCopy(this);">Copy</a><span class="kt">ssize_t</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">somefd</span><span class="p">,</span> <span class="n">somebuf</span><span class="p">,</span> <span class="n">somenum</span><span class="p">))</span> <span class="p">){</span>
+  <span class="c1">// do something</span>
+<span class="p">}</span>
+<textarea id="code-copy-18" class="code-copy-textarea" value="ssize_t x;
+if ( (x = read(somefd, somebuf, somenum)) ){
+  // do something
+}
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="undeclared-or-incorrectly-prototyped-functions" class="title-text">Undeclared or Incorrectly Prototyped Functions<a class="anchor title-text" href="#undeclared-or-incorrectly-prototyped-functions">#</a>
+</h2></div>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-19" onclick="onCopy(this);">Copy</a><span class="cp">#include &lt;stdio.h&gt;
+</span><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">void</span><span class="p">){</span>
+  <span class="kt">int</span> <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="p">();</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">start</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-19" class="code-copy-textarea" value='#include &amp;lt;stdio.h&amp;gt;
+int main(void){
+  int start = time();
+  printf("%d\n", start);
+}
+'></textarea></code></pre>
+<p>The library call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/time" class="fancy-link">time</a></code> actually takes a parameter (a pointer to some memory that can receive the <code class="highlighter-rouge">time_t</code> structure). The compiler might not catch this error because the programmer did not provide a valid function prototype by including time.h. For this reason, calling undeclared functions is illegal in C99 and beyond.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="extra-semicolons" class="title-text">Extra Semicolons<a class="anchor title-text" href="#extra-semicolons">#</a>
+</h2></div>
+
+<p>Semicolons after <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/for" class="fancy-link">for</a></code> and <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/while" class="fancy-link">while</a></code> statements will cause them to be interpreted as “empty loops”.</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-20" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">);{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"I'm printed once</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">);</span> <span class="c1">// program goes into infinite loop</span>
+  <span class="n">i</span><span class="o">++</span><span class="p">;</span>          <span class="c1">// this code is never executed</span>
+<textarea id="code-copy-20" class="code-copy-textarea" value="int i;
+for (i = 0; i &amp;lt; 5; i++);{
+  printf(&quot;I'm printed once\n&quot;);
+}
+while (i &amp;lt; 10); // program goes into infinite loop
+  i++;          // this code is never executed
+"></textarea></code></pre>
+
+<p>Adding semicolons adjacent to each other in code blocks is perfectly legal and is ignored by the compiler. You can also omit components of a <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/for" class="fancy-link">for</a></code> statement by putting nothing between semicolons or between semicolons and parentheses.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-21" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(;</span> <span class="n">i</span><span class="o">++</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;)</span> <span class="p">{</span> <span class="c1">// i=1,2,3,4,5</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">i</span><span class="p">);;;;;;;;;;;;;</span>
+<span class="p">}</span>
+<textarea id="code-copy-21" class="code-copy-textarea" value='int i = 0;
+for (; i++ &amp;lt; 5;) { // i=1,2,3,4,5
+    printf("%d\n", i);;;;;;;;;;;;;
+}
+'></textarea></code></pre>
+
+</div></div>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="other-gotchas">Other Gotchas</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="c-preprocessor-macros-and-precedence" class="title-text">C Preprocessor macros and precedence<a class="anchor title-text" href="#c-preprocessor-macros-and-precedence">#</a>
+</h2></div>
+
+<p>Preprocessing is an operation performed <strong>before</strong> the program is actually compiled. It is nothing but text substitution, i.e. copy-and-paste. Consider the following code.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-22" onclick="onCopy(this);">Copy</a><span class="cp">#define BADD(x,y) x+y
+</span><span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="n">BADD</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">];</span>
+<textarea id="code-copy-22" class="code-copy-textarea" value="#define BADD(x,y) x+y
+char buffer[BADD(5,5)*2];
+"></textarea></code></pre>
+
+<p>After preprocessing, the code will look exactly like this.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-23" onclick="onCopy(this);">Copy</a><span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">5</span><span class="o">+</span><span class="mi">5</span><span class="o">*</span><span class="mi">2</span><span class="p">];</span>
+<textarea id="code-copy-23" class="code-copy-textarea" value="char buffer[5+5*2];
+"></textarea></code></pre>
+
+<p>Notice that the buffer takes up 15 bytes instead of 20, since multiplication has higher precedence than addition. To prevent this kind of behavior, make sure to surround all macro variables as well as the entire macro expression with parentheses.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-24" onclick="onCopy(this);">Copy</a><span class="cp">#define ADD(x,y) ((x)+(y))
+</span><textarea id="code-copy-24" class="code-copy-textarea" value="#define ADD(x,y) ((x)+(y))
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="c-preprocessor-macros-and-side-effects" class="title-text">C Preprocessor Macros and Side-Effects<a class="anchor title-text" href="#c-preprocessor-macros-and-side-effects">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-25" onclick="onCopy(this);">Copy</a><span class="cp">#define min(a,b) ((a)&lt;(b) ? (a) : (b))
+</span><span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="o">++</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span> <span class="n">printf</span><span class="p">(</span><span class="s">"%d is six"</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+<textarea id="code-copy-25" class="code-copy-textarea" value='#define min(a,b) ((a)&amp;lt;(b) ? (a) : (b))
+int x = 4;
+if (min(x++, 100)) printf("%d is six", x);
+'></textarea></code></pre>
+<p>The conditional expression effectively expands to <code class="highlighter-rouge">x++ &lt; 100 ? x++ : 100</code>, which results in <code class="highlighter-rouge">x</code> being incremented twice. There is no good way to prevent these kinds of side effects when using Standard C macros. But <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html" class="fancy-link wiki-link">GNU C</a> provides some workarounds (only works when using GCC).</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="sizeoftype-vs-sizeoftype-" class="title-text">
+<code class="highlighter-rouge">sizeof(type[])</code> vs <code class="highlighter-rouge">sizeof(type *)</code><a class="anchor title-text" href="#sizeoftype-vs-sizeoftype-">#</a>
+</h2></div>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-26" onclick="onCopy(this);">Copy</a><span class="cp">#define ARRAY_LENGTH(A) (sizeof((A)) / sizeof((A)[0]))
+</span><span class="kt">int</span> <span class="n">fixed_length_array</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span> <span class="c1">// ARRAY_LENGTH(fixed_length_array) = 10</span>
+<span class="kt">int</span> <span class="o">*</span><span class="n">dynamic_array</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span> <span class="c1">// ARRAY_LENGTH(dynamic_array) = 2 or 1</span>
+<textarea id="code-copy-26" class="code-copy-textarea" value="#define ARRAY_LENGTH(A) (sizeof((A)) / sizeof((A)[0]))
+int fixed_length_array[10]; // ARRAY_LENGTH(fixed_length_array) = 10
+int *dynamic_array = malloc(10); // ARRAY_LENGTH(dynamic_array) = 2 or 1
+"></textarea></code></pre>
+<p>If we have a declared array variable like <code class="highlighter-rouge">fixed_length_array</code>, the <code class="highlighter-rouge">sizeof</code> operator yields the bytes that array takes up, and dividing this size by the size of the first element yields the number of elements in the array. Unfortunately, the size of a pointer is always the same (8 or 4 bytes), no matter the size or type of the array to which it points. Only compile-time declared array variables (and <a href="https://gcc.gnu.org/onlinedocs/gcc/Variable-Length.html" class="fancy-link wiki-link">C99 variable-length arrays</a>) will expose the true array size through <code class="highlighter-rouge">sizeof</code>.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="sizeof-and-side-effects" class="title-text">
+<code class="highlighter-rouge">sizeof</code> and Side-Effects<a class="anchor title-text" href="#sizeof-and-side-effects">#</a>
+</h2></div>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-27" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">size_t</span> <span class="n">size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">a</span><span class="o">++</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"size: %lu, a: %d"</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+<textarea id="code-copy-27" class="code-copy-textarea" value='int a = 0;
+size_t size = sizeof(a++);
+printf("size: %lu, a: %d", size, a);
+'></textarea></code></pre>
+<p>This code prints out the following.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-28" onclick="onCopy(this);">Copy</a><span class="nl">size:</span> <span class="mi">4</span><span class="p">,</span> <span class="n">a</span><span class="o">:</span> <span class="mi">0</span>
+<textarea id="code-copy-28" class="code-copy-textarea" value="size: 4, a: 0
+"></textarea></code></pre>
+<p>The expression passed into <code class="highlighter-rouge">sizeof</code> is not actually evaluated at runtime in most cases, since the type (hence the size) of the expression can be calculated at compile time. Though there are exceptions in the case of <a href="http://port70.net/~nsz/c/c11/n1570.html#6.5.3.4p2" class="fancy-link wiki-link">C99 variable-length arrays</a>, since their sizes are determined at runtime.</p>
+
+<div align="center">
+<a href="/wikibook/c-programming-part-2-text-input-and-output.html#" class="fancy-link wiki-link">
+Back: C Programming, Part 2: Text Input And Output
+</a> |
+<a href="/wikibook/c-programming-part-4-strings-and-structs.html#" class="fancy-link wiki-link">
+Next: C Programming, Part 4: Strings and Structs
+</a>
+</div>
+</div></div>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/c-programming-part-3-common-gotchas.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Advanced C</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Advanced C
+              
+                <a class="github-link hidden-xs" href="https://github.com/illinois-cs241/illinois-cs241.github.io/blob/develop/_docs/advanced_c.md">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+              <div class="submission-wrapper">
+                
+                  <b>Entire Assignment</b> due <b>10/01/2018 12:00 am</b><br/>
+                  
+                    <b>Graded files:</b>
+                    <ul>
+                      
+                        <li>dictionary.c</li>
+                      
+                    </ul>
+                  
+                
+              </div>
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc"><li><a id="toc_requirements" href="#requirements" class="fancy-link">Requirements:</a></li></ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+  <div class="pad"><div class="card">
+<div class="title"><h2 id="learning-objectives" class="title-text">Learning Objectives<a class="anchor title-text" href="#learning-objectives">#</a>
+</h2></div>
+  
+  
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>
+    The learning objectives for Advanced C are: <br>
+    </p>
+<ul class="mdl-list">
+      
+        <li class="mdl-list__item">
+          <span class="mdl-list__item-primary-content">Implementing an object with blocks</span>
+        </li>
+      
+        <li class="mdl-list__item">
+          <span class="mdl-list__item-primary-content">Understanding extensions to the C language</span>
+        </li>
+      
+        <li class="mdl-list__item">
+          <span class="mdl-list__item-primary-content">Exploring modern syntax structures in C</span>
+        </li>
+      
+    </ul>
+</div></div></div>
+</div></div>
+</div>
+        <div class="wrapper">
+<p>Welcome to the first CS296 assignment! Before we begin, let’s go through a quick
+overview of the structure of this document. Each document for CS2916-41 will
+have the following sections:</p>
+
+<ul>
+  <li>Introduction - a quick blurb providing some motivation behind the MP</li>
+  <li>Requirements - the minimum requirements you will need to satisfy to get a full
+score on the MP</li>
+  <li>Walkthrough - this may not be in every document, but for some assignments, we
+will include a ‘walkthrough’ section that will have more hints on how to
+complete the assignment.</li>
+  <li>Analysis - a discussion on what we hoped you learnt from completing the
+assignment and some further challenges or relevant resources.</li>
+</ul>
+
+<p>If you are already comfortable with the present topic or you’d like to explore 
+it on your own before looking at the walkthrough/discussion, feel free to do so 
+(although we reccomend at least coming back here for the analysis section)! This
+class is all about explorative learning and is much more open ended than CS241. 
+While your MPs and Labs from CS241 will help you master the techniques and gain 
+the knowledge required to call yourself a systems programmer, these MPs will be 
+brainteasers or puzzles to further your interest in a particular area.</p>
+
+<div class="pad"><div class="card">
+<div class="title"><h2 id="requirements" class="title-text">Requirements:<a class="anchor title-text" href="#requirements">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Create an implementation of a dictionary by using clang’s blocks!
+Your implementation will have a single entry point that is a variadic function.
+You will need to suport the following operations:</p>
+<ul>
+  <li>lookup</li>
+  <li>insert</li>
+  <li>destroy</li>
+</ul>
+<p>The runtime of your implementation does not matter (O(n) lookups are fine!)</p>
+<p>To invoke a particular operation the user should pass in a string with the name
+of that operation, followed by any arguments that operation may use. The
+arguments consumed by each of the operations, and their behaviors are described
+in the psuedo code example below:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">my_dict</span> <span class="o">=</span> <span class="n">create_dictionary</span><span class="p">();</span>
+
+  <span class="c1">// This line makes _dictionary_destructor be called automatically when my_dict</span>
+  <span class="c1">// goes out of scope </span>
+  <span class="c1">// _dictionary_destructor takes in a double pointer (because of clang's type</span>
+  <span class="c1">// restrictions) but to access the underlying dictionary, just have the line:</span>
+  <span class="c1">//     dictionary_t d = (dictionary_t)(*e);</span>
+  <span class="c1">// in your _dictionary_destructor implementation</span>
+  <span class="n">auto_cleanup</span><span class="p">(</span><span class="n">my_dict</span><span class="p">);</span>
+  <span class="c1">// The following line initializes a dict_value to hold a key of "k1", with a </span>
+  <span class="c1">// value of "v1". The length of the value is 3 (2 bytes for 'v' and '1' plus </span>
+  <span class="c1">// an extra byte for the null byte)</span>
+  <span class="n">dict_value</span> <span class="n">new_val</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">key</span><span class="o">=</span><span class="s">"k1"</span><span class="p">,</span> <span class="p">.</span><span class="n">value_len</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="p">.</span><span class="n">value</span><span class="o">=</span><span class="s">"v1"</span> <span class="p">};</span>
+  <span class="n">dict_value</span> <span class="n">new_val1</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">key</span><span class="o">=</span><span class="s">"k2"</span><span class="p">,</span> <span class="p">.</span><span class="n">value_len</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="p">.</span><span class="n">value</span><span class="o">=</span><span class="s">"v2"</span> <span class="p">};</span>
+
+  <span class="n">my_dict</span><span class="p">(</span><span class="s">"insert"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">new_val</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">new_val1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+  <span class="c1">// The insert operation should keep consuming arguments of type dict_value* </span>
+  <span class="c1">// until it sees a NULL. The return value after an insert is undefined.</span>
+  <span class="c1">// There should be no upper limit (aside from memory contraints) on how many</span>
+  <span class="c1">// times insert can be called.</span>
+
+  <span class="n">dict_value</span> <span class="o">=</span> <span class="n">my_dict</span><span class="p">(</span><span class="s">"lookup"</span><span class="p">,</span> <span class="s">"k1"</span><span class="p">);</span>
+  <span class="c1">// The lookup operation consumes one value which is the key it is looking for</span>
+  <span class="c1">// inside it's dictionary. If the key is found, return the dict_value which</span>
+  <span class="c1">// matched. Otherwise, return dict_NULL</span>
+
+  <span class="n">my_dict</span><span class="p">(</span><span class="s">"destroy"</span><span class="p">);</span>
+  <span class="c1">// The same as calling my_dict(NULL); You will need to support both</span>
+  <span class="c1">// The destroy operation consumes no arguments and should free any heap memory</span>
+  <span class="c1">// used interally and reset the internal state for further use.</span>
+  <span class="c1">// The return value is undefined.</span>
+
+<span class="p">}</span>
+
+</code></pre></div></div>
+<p>You should also be able to use multiple instances of the dictionary at any given
+time (it doesn’t have to be thread safe, if you already know what that means).</p>
+<p>The dictionary has a destructor method <code class="highlighter-rouge">_dictionary_destructor</code> which should
+call the dictionary’s destroy method and <code class="highlighter-rouge">Block_release</code> on the dictionary.
+We’ve set this up to be the case automatically when <code class="highlighter-rouge">auto_cleanup</code> is called on
+the created dictionary.</p>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="walkthrough">Walkthrough</h1>
+<p>Ideally, this assignment shouldn’t take more than 2 hours using the walkthrough.
+If it does take you longer than that, we encourage you to reach out to course
+staff and detail where you’re stuck or what seems difficult about the
+assignment! This will help us update our documentation and/or the course content
+accordingly.</p>
+<h3 id="optional-exploring-variadic-functions" class="title-text">(OPTIONAL) Exploring variadic functions</h3>
+<p>Variadic functions are a controversial part of the C language - and for good
+reason! A variadic function is one that doesn’t define how many parameters it
+expects at compile time. There’s some clear use cases for variadic functions,
+such as <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/printf" class="fancy-link">printf</a></code>. Have you ever wonder how to declare a function like <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/printf" class="fancy-link">printf</a></code>
+that can take in a varaible number of arguments of any type? The answer is to
+declare a variadic function. Of course, variadic functions have some nasty
+downsides. One of them is that it simply leads to code that’s harder to read
+since it obtains its arguments in a strange way. Another major downside is that
+you can’t tell the compiler what types you want your arguments to have - leading
+to more situations where a programmer can create insidious bugs.</p>
+<p><em>fun fact:</em> Variadic functions are pretty common in languagues, a noteable
+example being python. However, python has better semantics around this feature
+by providing an array containing all passed in arguments as opposed to C’s
+approach described below.</p>
+<p>So how can we declare a variadic function? In early versions of C, it was as
+simple as just writing:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">f</span><span class="p">()</span>
+</code></pre></div></div>
+<p>A far cry from what something we might see today:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">f</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="p">...)</span>
+</code></pre></div></div>
+<p>Let’s try writing an actual variadic function. The function that we’re going to
+write is going to take in an integer <code class="highlighter-rouge">n</code> telling us how many arguments to expect
+and then <code class="highlighter-rouge">n</code> integers which we will find the sum of. We’ll start with the
+prototype of the function:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">sum</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="p">...)</span>
+</code></pre></div></div>
+<p>This is the same as the example we have above. Note that it’s not important for
+our return type to be int, or the first parameter’s type to be int. It is
+required for there to be one or more named arguments before we have the <code class="highlighter-rouge">...</code>
+that signifies that this is a variadic function. We need at least one named
+parameter because we’re going to use it to obtain the unnamed parameters. In C,
+when passing in arguments, the arguments are placed onto the stack after the
+return address. When we’re looking for variadic arguments, all we have to do is
+get the pointer to the last named argument, and continue reading the stack
+memory after it. Of course, this requires us to make assumptions about the type
+of data that was initially passed in. Luckily, by including the header <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/stdarg" class="fancy-link">stdarg</a></code>
+we get some macros that make it easier for us to extract these arguments.</p>
+<p>The first thing we’re going to need is a variable of type <code class="highlighter-rouge">va_list</code> that stores
+the state required to figure out where the next argument will be located. We
+will be initializing this list with the macro <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/va_start" class="fancy-link">va_start</a></code> which will setup our
+list so that we can start pulling arguments out of it.</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdarg.h&gt;
+</span><span class="kt">int</span> <span class="n">sum</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="p">...){</span>
+    <span class="kt">va_list</span> <span class="n">args</span><span class="p">;</span>
+    <span class="n">va_start</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Note that <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/va_start" class="fancy-link">va_start</a></code> takes in the last named argument as one of its parameters.
+Now we can start pulling values out of the stack. To do this we can use the
+macro <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/va_arg" class="fancy-link">va_arg</a></code>. <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/va_arg" class="fancy-link">va_arg</a></code> takes in a <code class="highlighter-rouge">va_list</code> and a type so that it knows what
+type the argument it pulls out should have. We can’t normally pass a type name
+as an argument to a function, but there’s nothing stopping us from passing in a
+type name as a parameter to a macro. Putting this information together, we get:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdarg.h&gt;
+</span><span class="kt">int</span> <span class="n">sum</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="p">...){</span>
+    <span class="kt">va_list</span> <span class="n">args</span><span class="p">;</span>
+    <span class="n">va_start</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">accumulator</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(;</span><span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">;</span> <span class="n">n</span><span class="o">--</span><span class="p">){</span>
+       <span class="n">accumulator</span> <span class="o">+=</span> <span class="n">va_arg</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span> 
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">accumulator</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>In this example we had the first argument to the function be the number of
+arguments we’re going to need. This isn’t always the case. Some functions use
+other mechanisms such as reading in elements until it reads NULL or some other
+special value.</p>
+<p>Try writing your own variadic functions in C! One interesting excersize could be
+to write a simple parser for an arithmetic expression such as <code class="highlighter-rouge">$1 + $2</code> and
+replace <code class="highlighter-rouge">$n</code> with the value of the nth variadic argument to make a simple
+calculator.</p>
+<p>Note that C also has variadic macros, which work a bit differently. Look online
+to see how you can write a variadic macros which works out how many arguments
+were passed in to it.</p>
+<h3 id="optional-exploring-clang-blocks" class="title-text">(OPTIONAL) Exploring clang blocks</h3>
+<p>Clang blocks are a way to write functions within functions. It’s a feature that
+was initially developed by Apple for use in Objective-C, but eventually made
+it’s way back to C as a language extension.</p>
+<p>Blocks give us better ways to describe functions and enable us to pass them
+around in ways that are increasingly common in languages such as Python,
+JavaScript and almost all functional programming languages (e.g. Haskell, OCaml,
+etc.).</p>
+<p>So what is a Block? A Block is essentially a function pointer but also some
+state that the function might reference. Let’s take a look as some example
+python code.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">adder</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_to_x</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+    <span class="k">return</span> <span class="n">add_to_x</span>
+</code></pre></div></div>
+<p>This function takes in a number, and then returns a function which takes in
+another number and spits out the sum of the two numbers. However, in order for
+that inner function to work, it needs to remember what value was passed in for
+<code class="highlighter-rouge">x</code> so that it can reuse it. In other words, it needs to remember what was
+inside the scope of its parent function.</p>
+<p>The corresponding implementation of the above function in C using Clang’s Blocks
+would be:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;Block.h&gt;
+</span><span class="k">typedef</span> <span class="nf">int</span> <span class="p">(</span><span class="o">^</span> <span class="n">AddIntBlock</span><span class="p">)(</span><span class="kt">int</span><span class="p">)</span>
+<span class="n">AddIntBlock</span> <span class="n">MakeAdder</span><span class="p">(</span><span class="kt">int</span> <span class="n">to_add</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">Block_copy</span><span class="p">(</span> <span class="o">^</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">to_add</span><span class="p">;</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>I’m using a <code class="highlighter-rouge">typedef</code> to make the code a bit more readable. You may note that
+block types look similar to function pointers, except that the <code class="highlighter-rouge">*</code> is replaced
+by a <code class="highlighter-rouge">^</code>. We’re also using a function <code class="highlighter-rouge">Block_copy</code> which takes in a block and
+copies the current scope into it. By default, Blocks assume that they don’t need
+to save the scope of the parent, and that they can just read the values present.
+This works as long as those variables haven’t gone out of scope, at which point,
+executing the function will lead to undefined behavior. The actual code defining
+the Block is just:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="o">^</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">to_add</span><span class="p">;</span> <span class="p">}</span>
+</code></pre></div></div>
+<p>We can leave off the return type (int) and let clang figure that out for us, so
+all we have to write is:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">^</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">to_add</span><span class="p">;</span> <span class="p">}</span>
+</code></pre></div></div>
+<p>Pretty straightforward syntax if you ask me! Of course, since we called
+<code class="highlighter-rouge">Block_copy</code> we’ve allocated some memory to hold stuff that the parent owned. We
+will need to deallocate this using <code class="highlighter-rouge">Block_release</code>. A complete program may look
+like:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;Block.h&gt;
+#include &lt;stdio.h&gt;
+</span><span class="k">typedef</span> <span class="kt">int</span> <span class="p">(</span><span class="o">^</span> <span class="n">AddIntBlock</span><span class="p">)(</span><span class="kt">int</span><span class="p">);</span>
+<span class="n">AddIntBlock</span> <span class="nf">MakeAdder</span><span class="p">(</span><span class="kt">int</span> <span class="n">to_add</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">Block_copy</span><span class="p">(</span> <span class="o">^</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">to_add</span><span class="p">;</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(){</span>
+    <span class="n">AddIntBlock</span> <span class="n">add_5</span> <span class="o">=</span> <span class="n">MakeAdder</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+    <span class="c1">// Clang supports using __auto_type to do what auto does in C++</span>
+    <span class="c1">//   It's very useful for representing Blocks since they have rather verbose</span>
+    <span class="c1">//   type names</span>
+    <span class="n">__auto_type</span> <span class="n">add_and_print</span> <span class="o">=</span> 
+        <span class="o">^</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span> <span class="n">printf</span><span class="p">(</span><span class="s">"%d + %d = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">add_5</span><span class="p">(</span><span class="n">n</span><span class="p">));</span> <span class="p">};</span> 
+    <span class="n">add_and_print</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">add_and_print</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+    <span class="n">Block_release</span><span class="p">(</span><span class="n">add_5</span><span class="p">);</span>
+    <span class="c1">// Note that we don't need to release add_and_print since we didn't copy any</span>
+    <span class="c1">// data into the block.</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>We can also have variadic blocks - which you will need to complete this
+assignment.</p>
+<h3 id="hints" class="title-text">Hints</h3>
+<p>So what will our implementation of the dictionary actually look like? We know we
+need some way to store the <code class="highlighter-rouge">data_value</code> elements that we will be getting from
+insert. The easiest way to do this would be to declare some variable
+representing an array of <code class="highlighter-rouge">data_values</code>. The challenge is that we need to store
+this data somewhere that the function that represents the dictionary can access
+every time it is called.</p>
+<p>One way we could accomplish this is with a global variable. This could be an
+interesting solution, but we would like to able to use multiple instances.
+Although there are ways to make this work using globally scoped variables (Can
+you think of any?) there are far better solutions out there. Globally scoped
+variables can be hard to document and keep track of. It also exposes the
+internals of your data structure to the world, and could lead to potentially
+strange bugs causes by accidentally changing internal values.</p>
+<p>We need something that acts like a global variable, in that we have access to it
+on every call of the function without needing the caller to pass it in, but we
+want this variable to only be scoped to the dictionary. Thought of anything that
+fits the bill here? (Take a moment to see if you can figure it out for
+yourself!)</p>
+<p>We can use the <code class="highlighter-rouge">__block</code> keyword! When using the clang blocks extension,
+declaring a variable as <code class="highlighter-rouge">__block</code> will make the variable act like a <code class="highlighter-rouge">static</code>
+variable but bound to a block. Using <code class="highlighter-rouge">static</code> in a block is undefined behavior.
+So instead of using a global array of dict_values, we can use a static one.</p>
+<p>This brings us to our next point. We don’t know how many elements we have
+beforehand, when declaring an array we have to specify how many elements we
+expect to have.  A better choice might be to just have a pointer instead of an
+array, and then get space for it using calloc or malloc. We can still treat the
+variable as an array, and easily add more space to the end using realloc! The
+only thing we might need to keep track of is how many elements we have.</p>
+<p>In order to make our implementation follow good coding practices, we should
+probably put each operation in it’s own block inside the dictionary
+implementation (its like inception, but with functions). This will produce code
+that looks vaguely similar to definitions of a class in C++ or other object
+oriented languages.</p>
+<p>Now, we just need a way to access the functions we’ve built in our dictionary.
+To accomplish this we can just write a series of <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/if" class="fancy-link">if</a></code> statements and find out
+what action the user wants to perform. Once we know what action the user is
+requesting, we can assume that the remaining variadic arguments conform to the
+specifications detailed above.</p>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+<div class="pad"><div class="card">
+<div class="title"><h2 id="submission-instructions" class="title-text">Submission Instructions<a class="anchor title-text" href="#submission-instructions">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Please read details on <a href="/#academic-integrity" class="fancy-link wiki-link">Academic Integrity</a> fully. These are shared by all assignments in CS 241.</p>
+<p>We will be using GitHub as our hand-in system this semester. Our grading system will checkout your most recent (pre-deadline) commit for grading. Therefore, to hand in your code, all you have to do is commit and push to your Github repository.</p>
+<p>To check out the provided code for <code class="highlighter-rouge">advanced_c</code> from the class repository, go to your cs241 directory (the one you checked out for “know your tools”) and run:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git pull release master
+</code></pre></div></div>
+<p>If you run <code class="highlighter-rouge"><a href="https://linux.die.net/man/1/ls" class="fancy-link">ls</a></code> you will now see a <code class="highlighter-rouge">advanced_c</code> folder, where you can find this assignment! To commit your changes (send them to us), type:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git add advanced_c
+git commit -m "advanced_c submission"
+git push origin master
+</code></pre></div></div>
+<p>Your repository directory can be viewed from a web browser from the following URL: 
+<a href="https://github-dev.cs.illinois.edu/cs241-fa18/NETID/tree/master/advanced_c" class="fancy-link wiki-link">https://github-dev.cs.illinois.edu/cs241-fa18/NETID/tree/master/advanced_c</a> where NETID is your University NetID. It is important to check that the files you expect to be graded are present and up to date in your remote git copy.</p>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="assignment-feedback" class="title-text">Assignment Feedback<a class="anchor title-text" href="#assignment-feedback">#</a>
+</h2></div>
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>We strive to provide the best assignments that we can for this course, and we would like your feedback on them!</p>
+<p>This is the form we will use to evaluate our assignments. We appreciate the time you take to give us your honest feedback and we promise to keep improving the course to make your experience in CS 241 the best it can be.</p>
+<p><a href="https://goo.gl/forms/hREf0ojFWumYfQF12" class="fancy-link wiki-link">https://goo.gl/forms/hREf0ojFWumYfQF12</a></p>
+</div></div></div>
+</div></div>
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_docs/advanced_c.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

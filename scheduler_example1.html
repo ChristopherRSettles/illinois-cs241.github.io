@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Example1</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Example1
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc"></ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper"><div class="pad"><div class="card">
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="example-1">Example 1</h1>
+<p>Consider the following simple schedule:</p>
+<table class="table">
+  <thead>
+    <tr>
+      <th>job number</th>
+      <th>arrival time</th>
+      <th>running time</th>
+      <th>priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0</td>
+      <td>8</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>1</td>
+      <td>8</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+<p>The flow of execution of functions calls is as follows:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> scheduler_start_up(s = FCFS)
+     --&gt; scheduler initialized
+
+ scheduler_new_job(job_number = 0, time = 0, running_time = 8, priority = 1)
+     --&gt; returns true, indicating that job(id=0) should be scheduled at this time.
+
+ scheduler_new_job(job_number = 1, time = 1, running_time = 8, priority = 1)
+     --&gt; returns false, indicating that job(id=1) will not be scheduled at this time.
+
+ scheduler_new_job(job_number = 2, time = 3, running_time = 4, priority = 2)
+     --&gt; returns false, indicating that job(id=2) will not be scheduled at this time.
+
+ scheduler_job_finished(job_number = 0, time = 8)
+     --&gt; returns 1, indicating that job(id=1) should be run next on the processor.
+
+ scheduler_job_finished(job_number = 1, time = 16)
+     --&gt; returns 2, indicating that job(id=2) should be run next on the processor.
+
+ scheduler_job_finished(job_number = 2, time = 20)
+     --&gt; returns -1, indicating that the processor should remain idle.
+
+ scheduler_average_waiting_time()
+     --&gt; returns (20/3) == 6.67.
+
+ scheduler_average_turnaround_time()
+     --&gt; returns (40/3) == 13.33.
+
+ scheduler_average_response_time()
+     --&gt; returns (20/3) == 6.67.
+
+ scheduler_clean_up()
+     --&gt; cleans up and frees all memory used by the scheduler
+
+</code></pre></div></div>
+<p>When the simulator is executed and the flow of execution is implemented correctly, you will see the following output:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Loaded 3 job(s) using First Come First Served (FCFS) scheduling...
+
+=== [TIME 0] ===
+A new job, job 0 (running time=8, priority=1), arrived. Job 0 is now running on processor.
+  Queue: 
+
+At the end of time unit 0...
+  History: 0
+
+  Queue: 
+
+=== [TIME 1] ===
+A new job, job 1 (running time=8, priority=1), arrived. Job 1 is set to idle (-1).
+  Queue: 
+
+At the end of time unit 1...
+  History: 00
+
+  Queue: 
+
+=== [TIME 2] ===
+At the end of time unit 2...
+  History: 000
+
+  Queue: 
+
+=== [TIME 3] ===
+A new job, job 2 (running time=4, priority=2), arrived. Job 2 is set to idle (-1).
+  Queue: 
+
+At the end of time unit 3...
+  History: 0000
+
+  Queue: 
+
+=== [TIME 4] ===
+At the end of time unit 4...
+  History: 00000
+
+  Queue: 
+
+=== [TIME 5] ===
+At the end of time unit 5...
+  History: 000000
+
+  Queue: 
+
+=== [TIME 6] ===
+At the end of time unit 6...
+  History: 0000000
+
+  Queue: 
+
+=== [TIME 7] ===
+At the end of time unit 7...
+  History: 00000000
+
+  Queue: 
+
+=== [TIME 8] ===
+Job 0 finished. Processor is now running job 1.
+  Queue: 
+
+At the end of time unit 8...
+  History: 000000001
+
+  Queue: 
+
+=== [TIME 9] ===
+At the end of time unit 9...
+  History: 0000000011
+
+  Queue: 
+
+=== [TIME 10] ===
+At the end of time unit 10...
+  History: 00000000111
+
+  Queue: 
+
+=== [TIME 11] ===
+At the end of time unit 11...
+  History: 000000001111
+
+  Queue: 
+
+=== [TIME 12] ===
+At the end of time unit 12...
+  History: 0000000011111
+
+  Queue: 
+
+=== [TIME 13] ===
+At the end of time unit 13...
+  History: 00000000111111
+
+  Queue: 
+
+=== [TIME 14] ===
+At the end of time unit 14...
+  History: 000000001111111
+
+  Queue: 
+
+=== [TIME 15] ===
+At the end of time unit 15...
+  History: 0000000011111111
+
+  Queue: 
+
+=== [TIME 16] ===
+Job 1 finished. Processor is now running job 2.
+  Queue: 
+
+At the end of time unit 16...
+  History: 00000000111111112
+
+  Queue: 
+
+=== [TIME 17] ===
+At the end of time unit 17...
+  History: 000000001111111122
+
+  Queue: 
+
+=== [TIME 18] ===
+At the end of time unit 18...
+  History: 0000000011111111222
+
+  Queue: 
+
+=== [TIME 19] ===
+At the end of time unit 19...
+  History: 00000000111111112222
+
+  Queue: 
+
+=== [TIME 20] ===
+Job 2 finished. Processor is now running job -1.
+  Queue: 
+
+FINAL TIMING DIAGRAM:
+  History: 00000000111111112222
+
+Average Waiting Time: 6.67
+Average Turnaround Time: 13.33
+Average Response Time: 6.67
+</code></pre></div></div>
+</div></div></div>
+</div></div></div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "static/scheduler_example1.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Synchronization, Part 5: Condition Variables</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Synchronization, Part 5: Condition Variables
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Synchronization,-Part-5:-Condition-Variables">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_warm-up" href="#warm-up" class="fancy-link">Warm up</a></li>
+<li><a id="toc_what-are-condition-variables-how-do-you-use-them-what-is-spurious-wakeup" href="#what-are-condition-variables-how-do-you-use-them-what-is-spurious-wakeup" class="fancy-link">What are condition variables? How do you use them? What is Spurious Wakeup?</a></li>
+<li><a id="toc_what-does-pthread_cond_wait-do" href="#what-does-pthread_cond_wait-do" class="fancy-link">What does <code class="highlighter-rouge">pthread_cond_wait</code> do?</a></li>
+<li><a id="toc_advanced-topic-why-do-condition-variables-also-need-a-mutex" href="#advanced-topic-why-do-condition-variables-also-need-a-mutex" class="fancy-link">(Advanced topic) Why do Condition Variables also need a mutex?</a></li>
+<li><a id="toc_why-do-spurious-wakes-exist" href="#why-do-spurious-wakes-exist" class="fancy-link">Why do spurious wakes exist?</a></li>
+<li><a id="toc_example" href="#example" class="fancy-link">Example</a></li>
+<li><a id="toc_other-semaphore-considerations" href="#other-semaphore-considerations" class="fancy-link">Other semaphore considerations</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="intro-to-condition-variables">Intro to Condition Variables</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="warm-up" class="title-text">Warm up<a class="anchor title-text" href="#warm-up">#</a>
+</h2></div>
+<p>Name these properties!</p>
+<ul>
+  <li>“Only one process(/thread) can be in the CS at a time”</li>
+  <li>“If waiting, then another process can only enter the CS a finite number of times”</li>
+  <li>“If no other process is in the CS then the process can immediately enter the CS”</li>
+</ul>
+
+<p>See <a class="fancy-link wiki-link" href="./synchronization-part-4-the-critical-section-problem.html">Synchronization, Part 4: The Critical Section Problem</a> for answers.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="what-are-condition-variables-how-do-you-use-them-what-is-spurious-wakeup" class="title-text">What are condition variables? How do you use them? What is Spurious Wakeup?<a class="anchor title-text" href="#what-are-condition-variables-how-do-you-use-them-what-is-spurious-wakeup">#</a>
+</h2></div>
+
+<ul>
+  <li>
+    <p>Condition variables allow a set of threads to sleep until tickled! You can tickle one thread or all threads that are sleeping. If you only wake one thread then the operating system will decide which thread to wake up. You don’t wake threads directly instead you ‘signal’ the condition variable, which then will wake up one (or all) threads that are sleeping inside the condition variable.</p>
+  </li>
+  <li>
+    <p>Condition variables are used with a mutex and with a loop (to check a condition).</p>
+  </li>
+  <li>
+    <p>Occasionally a waiting thread may appear to wake up for no reason (this is called a <em>spurious wake</em>)! This is not an issue because you always use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/wait" class="fancy-link">wait</a></code> inside a loop that tests a condition that must be true to continue.</p>
+  </li>
+  <li>
+    <p>Threads sleeping inside a condition variable are woken up by calling <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_broadcast" class="fancy-link">pthread_cond_broadcast</a></code> (wake up all) or <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_signal" class="fancy-link">pthread_cond_signal</a></code> (wake up one). Note despite the function name, this has nothing to do with POSIX <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/signal" class="fancy-link">signal</a></code>s!</p>
+  </li>
+</ul>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="what-does-pthread_cond_wait-do" class="title-text">What does <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_wait" class="fancy-link">pthread_cond_wait</a></code> do?<a class="anchor title-text" href="#what-does-pthread_cond_wait-do">#</a>
+</h2></div>
+<p>The call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_wait" class="fancy-link">pthread_cond_wait</a></code> performs three actions:</p>
+<ol>
+  <li>unlock the mutex</li>
+  <li>waits (sleeps until <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_signal" class="fancy-link">pthread_cond_signal</a></code> is called on the same condition variable). It does 1 and 2 atomically.</li>
+  <li>Before returning, locks the mutex</li>
+</ol>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="advanced-topic-why-do-condition-variables-also-need-a-mutex" class="title-text">(Advanced topic) Why do Condition Variables also need a mutex?<a class="anchor title-text" href="#advanced-topic-why-do-condition-variables-also-need-a-mutex">#</a>
+</h2></div>
+<p>Condition variables need a mutex for three reasons. The simplest to understand is that it prevents an early wakeup message (<code class="highlighter-rouge"><a href="https://linux.die.net/man/3/signal" class="fancy-link">signal</a></code> or <code class="highlighter-rouge">broadcast</code> functions) from being ‘lost.’ Imagine the following sequence of events (time runs down the page) where the condition is satisfied _just before _<code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_wait" class="fancy-link">pthread_cond_wait</a></code> is called. In this example the wake-up signal is lost!</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Thread 1</th>
+      <th>Thread 2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="highlighter-rouge">while (answer &lt; 42) {</code></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td><code class="highlighter-rouge">answer++</code></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td><code class="highlighter-rouge">p_cond_signal(cv)</code></td>
+    </tr>
+    <tr>
+      <td><code class="highlighter-rouge">p_cond_wait(cv, m) </code></td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If both threads had locked a mutex, the signal can not be sent until <em>after</em> <code class="highlighter-rouge">pthread_cond_wait(cv, m)</code> is called (which then internally unlocks the mutex)</p>
+
+<p>A second common reason is that updating the program state (<code class="highlighter-rouge">answer</code> variable) typically requires mutual exclusion - for example multiple threads may be updating the value of <code class="highlighter-rouge">answer</code>.</p>
+
+<p>A third and subtle reason is to satisfy real-time scheduling concerns which we only outline here: In a time-critical application, the waiting thread with the <em>highest priority</em> should be allowed to continue first. To satisfy this requirement the mutex must also be locked before calling <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_signal" class="fancy-link">pthread_cond_signal</a></code> or <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_broadcast" class="fancy-link">pthread_cond_broadcast</a></code> . For the curious, a longer and historical discussion is <a href="https://groups.google.com/forum/?hl=ky#!msg/comp.programming.threads/wEUgPq541v8/ZByyyS8acqMJ" class="fancy-link wiki-link">here</a>.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="why-do-spurious-wakes-exist" class="title-text">Why do spurious wakes exist?<a class="anchor title-text" href="#why-do-spurious-wakes-exist">#</a>
+</h2></div>
+<p>For performance. On multi-CPU systems it is possible that a race-condition could cause a wake-up (signal) request to be unnoticed. The kernel may not detect this lost wake-up call but can detect when it might occur. To avoid the potential lost signal the thread is woken up so that the program code can test the condition again.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="example" class="title-text">Example<a class="anchor title-text" href="#example">#</a>
+</h2></div>
+<p>Condition variables are <em>always</em> used with a mutex lock.</p>
+
+<p>Before calling <em>wait</em>, the mutex lock must be locked and <em>wait</em> must be wrapped with a loop.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="n">pthread_cond_t</span> <span class="n">cv</span><span class="p">;</span>
+<span class="n">pthread_mutex_t</span> <span class="n">m</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">count</span><span class="p">;</span>
+
+<span class="c1">// Initialize</span>
+<span class="n">pthread_cond_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cv</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">pthread_mutex_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">count</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">pthread_cond_wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cv</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">m</span><span class="p">);</span> 
+    <span class="cm">/* Remember that cond_wait unlocks the mutex before blocking (waiting)! */</span>
+    <span class="cm">/* After unlocking, other threads can claim the mutex. */</span>
+    <span class="cm">/* When this thread is later woken it will */</span>
+    <span class="cm">/* re-lock the mutex before returning */</span>
+<span class="p">}</span>
+<span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+
+<span class="c1">// later clean up with pthread_cond_destroy(&amp;cv); and mutex_destroy </span>
+
+
+<span class="c1">// In another thread increment count:</span>
+<span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+    <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+    <span class="n">pthread_cond_signal</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cv</span><span class="p">);</span>
+    <span class="cm">/* Even though the other thread is woken up it cannot not return */</span>
+    <span class="cm">/* from pthread_cond_wait until we have unlocked the mutex. This is */</span>
+    <span class="cm">/* a good thing! In fact, it is usually the best practice to call */</span>
+    <span class="cm">/* cond_signal or cond_broadcast before unlocking the mutex */</span>
+    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value="pthread_cond_t cv;
+pthread_mutex_t m;
+int count;
+
+// Initialize
+pthread_cond_init(&amp;amp;cv, NULL);
+pthread_mutex_init(&amp;amp;m, NULL);
+count = 0;
+
+pthread_mutex_lock(&amp;amp;m);
+while (count &amp;lt; 10) {
+    pthread_cond_wait(&amp;amp;cv, &amp;amp;m); 
+    /* Remember that cond_wait unlocks the mutex before blocking (waiting)! */
+    /* After unlocking, other threads can claim the mutex. */
+    /* When this thread is later woken it will */
+    /* re-lock the mutex before returning */
+}
+pthread_mutex_unlock(&amp;amp;m);
+
+// later clean up with pthread_cond_destroy(&amp;amp;cv); and mutex_destroy 
+
+
+// In another thread increment count:
+while (1) {
+    pthread_mutex_lock(&amp;amp;m);
+    count++;
+    pthread_cond_signal(&amp;amp;cv);
+    /* Even though the other thread is woken up it cannot not return */
+    /* from pthread_cond_wait until we have unlocked the mutex. This is */
+    /* a good thing! In fact, it is usually the best practice to call */
+    /* cond_signal or cond_broadcast before unlocking the mutex */
+    pthread_mutex_unlock(&amp;amp;m);
+}
+"></textarea></code></pre>
+</div></div>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="implementing-counting-semaphore">Implementing Counting Semaphore</h1>
+<ul>
+  <li>We can implement a counting semaphore using condition variables.</li>
+  <li>Each semaphore needs a count, a condition variable and a mutex
+    <pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="k">typedef</span> <span class="k">struct</span> <span class="n">sem_t</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">count</span><span class="p">;</span> 
+  <span class="n">pthread_mutex_t</span> <span class="n">m</span><span class="p">;</span>
+  <span class="n">pthread_condition_t</span> <span class="n">cv</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">sem_t</span><span class="p">;</span>
+<textarea id="code-copy-1" class="code-copy-textarea" value="typedef struct sem_t {
+  int count; 
+  pthread_mutex_t m;
+  pthread_condition_t cv;
+} sem_t;
+"></textarea></code></pre>
+  </li>
+</ul>
+<p>Implement <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_init" class="fancy-link">sem_init</a></code> to initialize the mutex and condition variable</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="nf">sem_init</span><span class="p">(</span><span class="n">sem_t</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">pshared</span><span class="p">,</span> <span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">pshared</span><span class="p">)</span> <span class="p">{</span> <span class="n">errno</span> <span class="o">=</span> <span class="n">ENOSYS</span> <span class="cm">/* 'Not implemented'*/</span><span class="p">;</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="n">s</span><span class="o">-&gt;</span><span class="n">count</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
+    <span class="n">pthread_mutex_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">m</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">pthread_cond_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">cv</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value="int sem_init(sem_t *s, int pshared, int value) {
+    if (pshared) { errno = ENOSYS /* 'Not implemented'*/; return -1; }
+
+    s-&amp;gt;count = value;
+    pthread_mutex_init(&amp;amp;s-&amp;gt;m, NULL);
+    pthread_cond_init(&amp;amp;s-&amp;gt;cv, NULL);
+    return 0;
+}
+"></textarea></code></pre>
+<p>Our implementation of <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_post" class="fancy-link">sem_post</a></code> needs to increment the count.
+We will also wake up any threads sleeping inside the condition variable.
+Notice we lock and unlock the mutex so only one thread can be inside the critical section at a time.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="n">sem_post</span><span class="p">(</span><span class="n">sem_t</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">m</span><span class="p">);</span>
+    <span class="n">s</span><span class="o">-&gt;</span><span class="n">count</span><span class="o">++</span><span class="p">;</span>
+    <span class="n">pthread_cond_signal</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">cv</span><span class="p">);</span> <span class="cm">/* See note */</span>
+    <span class="cm">/* A woken thread must acquire the lock, so it will also have to wait until we call unlock */</span>
+
+    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">m</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="sem_post(sem_t *s) {
+    pthread_mutex_lock(&amp;amp;s-&amp;gt;m);
+    s-&amp;gt;count++;
+    pthread_cond_signal(&amp;amp;s-&amp;gt;cv); /* See note */
+    /* A woken thread must acquire the lock, so it will also have to wait until we call unlock */
+
+    pthread_mutex_unlock(&amp;amp;s-&amp;gt;m);
+}
+"></textarea></code></pre>
+<p>Our implementation of <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_wait" class="fancy-link">sem_wait</a></code> may need to sleep if the semaphore’s count is zero.
+Just like <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_post" class="fancy-link">sem_post</a></code> we wrap the critical section using the lock (so only one thread can be executing our code at a time). Notice if the thread does need to wait then the mutex will be unlocked, allowing another thread to enter <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_post" class="fancy-link">sem_post</a></code> and waken us from our sleep!</p>
+<p>Notice that even if a thread is woken up, before it returns from  <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_wait" class="fancy-link">pthread_cond_wait</a></code> it must re-acquire the lock, so it will have to wait a little bit more (e.g. until sem_post finishes).</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-4" onclick="onCopy(this);">Copy</a><span class="n">sem_wait</span><span class="p">(</span><span class="n">sem_t</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">m</span><span class="p">);</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">pthread_cond_wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">cv</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">m</span><span class="p">);</span> <span class="cm">/*unlock mutex, wait, relock mutex */</span>
+    <span class="p">}</span>
+    <span class="n">s</span><span class="o">-&gt;</span><span class="n">count</span><span class="o">--</span><span class="p">;</span>
+    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">m</span><span class="p">);</span>
+<span class="p">}</span>
+<textarea id="code-copy-4" class="code-copy-textarea" value="sem_wait(sem_t *s) {
+    pthread_mutex_lock(&amp;amp;s-&amp;gt;m);
+    while (s-&amp;gt;count == 0) {
+        pthread_cond_wait(&amp;amp;s-&amp;gt;cv, &amp;amp;s-&amp;gt;m); /*unlock mutex, wait, relock mutex */
+    }
+    s-&amp;gt;count--;
+    pthread_mutex_unlock(&amp;amp;s-&amp;gt;m);
+}
+"></textarea></code></pre>
+<p><strong>Wait <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_post" class="fancy-link">sem_post</a></code> keeps calling <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_signal" class="fancy-link">pthread_cond_signal</a></code> won’t that break sem_wait?</strong>
+Answer: No! We can’t get past the loop until the count is non-zero. In practice this means <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_post" class="fancy-link">sem_post</a></code> would unnecessary call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_signal" class="fancy-link">pthread_cond_signal</a></code> even if there are no waiting threads. A more efficient implementation would only call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/pthread_cond_signal" class="fancy-link">pthread_cond_signal</a></code> when necessary i.e.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-5" onclick="onCopy(this);">Copy</a>    <span class="cm">/* Did we increment from zero to one- time to signal a thread sleeping inside sem_post */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="cm">/* Wake up one waiting thread! */</span>
+        <span class="n">pthread_cond_signal</span><span class="p">(</span><span class="o">&amp;</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">cv</span><span class="p">);</span>
+<textarea id="code-copy-5" class="code-copy-textarea" value="    /* Did we increment from zero to one- time to signal a thread sleeping inside sem_post */
+    if (s-&amp;gt;count == 1) /* Wake up one waiting thread! */
+        pthread_cond_signal(&amp;amp;s-&amp;gt;cv);
+"></textarea></code></pre>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="other-semaphore-considerations" class="title-text">Other semaphore considerations<a class="anchor title-text" href="#other-semaphore-considerations">#</a>
+</h2></div>
+<ul>
+  <li>Real semaphores implementation include a queue and scheduling concerns to ensure fairness and priority e.g. wake up the highest-priority longest sleeping thread.</li>
+  <li>Also, an advanced use of <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sem_init" class="fancy-link">sem_init</a></code> allows semaphores to be shared across processes. Our implementation only works for threads inside the same process.</li>
+</ul>
+</div></div>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/synchronization-part-5-condition-variables.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

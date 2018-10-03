@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Networking, Part 8: Protocols (TCP Handshaking, HTTP latency, Heart Bleed)</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Networking, Part 8: Protocols (TCP Handshaking, HTTP latency, Heart Bleed)
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Networking,-Part-8:-Protocols-(TCP-Handshaking,-HTTP-latency,-Heart-Bleed)">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_how-does-tcp-initiate-a-communication-channel-between-sockets" href="#how-does-tcp-initiate-a-communication-channel-between-sockets" class="fancy-link">How does TCP initiate a communication channel between sockets?</a></li>
+<li><a id="toc_which-posix-call-causes-the-first-syn-packet-to-be-sent-to-the-server" href="#which-posix-call-causes-the-first-syn-packet-to-be-sent-to-the-server" class="fancy-link">Which POSIX call causes the first syn packet to be sent to the server?</a></li>
+<li><a id="toc_subverting-protocols-case-study-denial-of-service" href="#subverting-protocols-case-study-denial-of-service" class="fancy-link">Subverting protocols case study: Denial of Service</a></li>
+<li><a id="toc_tcp-latency" href="#tcp-latency" class="fancy-link">TCP Latency</a></li>
+<li><a id="toc_tcp-and-http10-performance" href="#tcp-and-http10-performance" class="fancy-link">TCP and HTTP/1.0 performance</a></li>
+<li><a id="toc_http11-performance-improvements" href="#http11-performance-improvements" class="fancy-link">HTTP/1.1 performance improvements</a></li>
+<li><a id="toc_http20-performance-improvements" href="#http20-performance-improvements" class="fancy-link">HTTP/2.0 performance improvements</a></li>
+<li><a id="toc_quic-protocol" href="#quic-protocol" class="fancy-link">QUIC protocol</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper"><div class="pad"><div class="card">
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<h1 id="protocols">Protocols</h1>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-does-tcp-initiate-a-communication-channel-between-sockets" class="title-text">How does TCP initiate a communication channel between sockets?<a class="anchor title-text" href="#how-does-tcp-initiate-a-communication-channel-between-sockets">#</a>
+</h2></div>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="which-posix-call-causes-the-first-syn-packet-to-be-sent-to-the-server" class="title-text">Which POSIX call causes the first syn packet to be sent to the server?<a class="anchor title-text" href="#which-posix-call-causes-the-first-syn-packet-to-be-sent-to-the-server">#</a>
+</h2></div>
+
+<p>The first outgoing packet is sent by the client when the client calls <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/connect" class="fancy-link">connect</a></code></p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="n">socket</span><span class="p">(...)</span> <span class="o">&lt;-</span> <span class="n">A</span> <span class="n">socket</span> <span class="n">is</span> <span class="n">created</span> <span class="n">but</span> <span class="n">no</span> <span class="n">actual</span> <span class="n">connection</span> <span class="n">has</span> <span class="n">been</span> <span class="n">performed</span> <span class="n">yet</span><span class="p">.</span>
+<span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,...)</span> <span class="o">&lt;-</span> <span class="n">Initiate</span> <span class="n">connection</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value="socket(...) &amp;lt;- A socket is created but no actual connection has been performed yet.
+connect(fd,...) &amp;lt;- Initiate connection
+"></textarea></code></pre>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="subverting-protocols-case-study-denial-of-service" class="title-text">Subverting protocols case study: Denial of Service<a class="anchor title-text" href="#subverting-protocols-case-study-denial-of-service">#</a>
+</h2></div>
+<p>Syn flood
+Distributed Denial of Service
+Internet of Things Denial of Service</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="tcp-latency" class="title-text">TCP Latency<a class="anchor title-text" href="#tcp-latency">#</a>
+</h2></div>
+
+<p>Save the astronaut! The moon is 1.3 light seconds distant. The TCP client is on the Earth and a lunar console runs a TCP server. Assume a new TCP connection is required each time. How many seconds elapse between wanting to send a CLOSE-AIRLOCK message and the server receiving the data?</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="n">fd</span><span class="o">=</span><span class="n">socket</span><span class="p">(...)</span>
+<span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,...,...)</span>
+<span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="s">"CLOSE-AIRLOCK!"</span><span class="p">,</span><span class="mi">14</span><span class="p">);</span>
+<textarea id="code-copy-1" class="code-copy-textarea" value='fd=socket(...)
+connect(fd,...,...)
+write(fd,"CLOSE-AIRLOCK!",14);
+'></textarea></code></pre>
+<p>Answer: 3.9 seconds.
+TODO: Explain why. Create diagram</p>
+
+<p>How many seconds elapse between requesting data from the server and receiving the result?</p>
+
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="n">fd</span><span class="o">=</span> <span class="n">socket</span><span class="p">(...)</span>
+<span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,...,...)</span>
+<span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="s">"READ-TEMP!"</span><span class="p">,</span><span class="mi">10</span><span class="p">);</span>
+<span class="n">bytes</span><span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="n">buffer</span><span class="p">,</span><span class="mi">256</span><span class="p">);</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value='fd= socket(...)
+connect(fd,...,...)
+write(fd,"READ-TEMP!",10);
+bytes= read(fd,buffer,256);
+'></textarea></code></pre>
+<p>Answer: 5.2 seconds. Todo Explain why.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="tcp-and-http10-performance" class="title-text">TCP and HTTP/1.0 performance<a class="anchor title-text" href="#tcp-and-http10-performance">#</a>
+</h2></div>
+
+<p>If the client-server round trip time is 10 milliseconds, what is the minimum time required to display a web page with an image? Assume HTTP/1.0 and the image requires a separate HTTP request.</p>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="http11-performance-improvements" class="title-text">HTTP/1.1 performance improvements<a class="anchor title-text" href="#http11-performance-improvements">#</a>
+</h2></div>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="http20-performance-improvements" class="title-text">HTTP/2.0 performance improvements<a class="anchor title-text" href="#http20-performance-improvements">#</a>
+</h2></div>
+
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="quic-protocol" class="title-text">QUIC protocol<a class="anchor title-text" href="#quic-protocol">#</a>
+</h2></div>
+
+</div></div>
+</div></div></div>
+</div></div></div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/networking-part-8-protocols-(tcp-handshaking-http-latency-heart-bleed).md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="images/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="images/favicons/manifest.json">
+  <link rel="mask-icon" href="images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Signals, Part 4: Sigaction</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+  <link async rel="stylesheet" href="/css/code-style.css?v=2018-10-03 23:55:16 +0000">
+  <link rel="stylesheet" href="/css/main.css?v=2018-10-03 23:55:16 +0000">
+
+</head>
+
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            </button>
+
+            <a id="tuxlink"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAM1BMVEX///8CAgQMDAwsLCw0NDSjbQCkbQC+vbzOkwDU1NTlrADqvADxtgD0vQD12wD+/vz+//yBSdYEAAAAAXRSTlMAQObYZgAAADFJREFUCB0FwQkCQDAQBLCsq6g1/v9aCVQBthUwX8BIgStZCpUvKXSSLs6eyd0Pdg5+JwkBVyC74QYAAAAASUVORK5CYII=" title="Tux" alt="Tux" style="margin-left: 1em; width: 24px; filter: drop-shadow(1px 1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(-1px -1px 0 white); margin-top: 1em;"/></a>
+
+            <a class="navbar-brand navbar-link normal" href="/">CS 241: System Programming</a>
+            <a class="navbar-brand navbar-link small" href="/">CS 241</a>
+        </div>
+
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+            <a class="navbar-link" href="/mps.html">MPs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/labs.html">Labs</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/help.html">Help!</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/schedule.html">Schedule</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/honors.html">Honors</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/staff.html">The Crew</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/search.html">Search</a>
+            </li>
+            <li>
+            <a class="navbar-link" href="/wikibook/home.html">Wikibook</a>
+            </li>
+          </ul>
+        </div>
+        </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    <div class="col-md-8 col-sm-10 col-xs-12">
+      <div class="wrapper">
+        <div class="pad"><div class="card">
+          <div class="title">
+            <div class="speaker-wrapper">
+              <button onclick="speak()" class="speaker" alt="Read Page"></button>
+            </div>
+            <h1>
+              Signals, Part 4: Sigaction
+              
+                <a class="github-link hidden-xs" href="https://github.com/angrave/SystemProgramming/wiki//Signals,-Part-4:-Sigaction">Edit on Github</a>
+              
+            </h1>
+          </div>
+          <div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+            
+            
+          </div></div></div>
+        </div></div>
+      </div>
+      <div class="toc-wrapper">
+<h4>Content</h4>
+<ul class="toc">
+<li><a id="toc_how-and-why-do-i-use-sigaction-" href="#how-and-why-do-i-use-sigaction-" class="fancy-link">How and why do I use <code class="highlighter-rouge">sigaction</code> ?</a></li>
+<li><a id="toc_how-do-i-convert-a-signal-call-into-the-equivalent-sigaction-call" href="#how-do-i-convert-a-signal-call-into-the-equivalent-sigaction-call" class="fancy-link">How do I convert a <code class="highlighter-rouge">signal</code> call into the equivalent <code class="highlighter-rouge">sigaction</code> call?</a></li>
+<li><a id="toc_how-do-i-use-sigwait" href="#how-do-i-use-sigwait" class="fancy-link">How do I use sigwait?</a></li>
+</ul>
+</div>
+      <div id="content">
+        
+        <div class="wrapper">
+
+</div>
+        <div class="wrapper">
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-and-why-do-i-use-sigaction-" class="title-text">How and why do I use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigaction" class="fancy-link">sigaction</a></code> ?<a class="anchor title-text" href="#how-and-why-do-i-use-sigaction-">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>You should use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigaction" class="fancy-link">sigaction</a></code> instead of <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/signal" class="fancy-link">signal</a></code> because it has better defined semantics. <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/signal" class="fancy-link">signal</a></code> on different operating system does different things which is <strong>bad</strong>. <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigaction" class="fancy-link">sigaction</a></code> is more portable and is better defined for threads if need be.</p>
+<p>To change the “signal disposition” of a process - i.e. what happens when a signal is delivered to your process - use <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigaction" class="fancy-link">sigaction</a></code></p>
+<p>You can use system call <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigaction" class="fancy-link">sigaction</a></code> to set the current handler for a signal or read the current signal handler for a particular signal.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-0" onclick="onCopy(this);">Copy</a><span class="kt">int</span> <span class="n">sigaction</span><span class="p">(</span><span class="kt">int</span> <span class="n">signum</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">sigaction</span> <span class="o">*</span><span class="n">act</span><span class="p">,</span> <span class="k">struct</span> <span class="n">sigaction</span> <span class="o">*</span><span class="n">oldact</span><span class="p">);</span>
+<textarea id="code-copy-0" class="code-copy-textarea" value="int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
+"></textarea></code></pre>
+<p>The sigaction struct includes two callback functions (we will only look at the ‘handler’ version), a signal mask and a flags field -</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-1" onclick="onCopy(this);">Copy</a><span class="k">struct</span> <span class="n">sigaction</span> <span class="p">{</span>
+    <span class="kt">void</span>     <span class="p">(</span><span class="o">*</span><span class="n">sa_handler</span><span class="p">)(</span><span class="kt">int</span><span class="p">);</span>
+    <span class="kt">void</span>     <span class="p">(</span><span class="o">*</span><span class="n">sa_sigaction</span><span class="p">)(</span><span class="kt">int</span><span class="p">,</span> <span class="n">siginfo_t</span> <span class="o">*</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="p">);</span>
+    <span class="n">sigset_t</span>   <span class="n">sa_mask</span><span class="p">;</span>
+    <span class="kt">int</span>        <span class="n">sa_flags</span><span class="p">;</span>
+<span class="p">};</span> 
+<textarea id="code-copy-1" class="code-copy-textarea" value="struct sigaction {
+    void     (*sa_handler)(int);
+    void     (*sa_sigaction)(int, siginfo_t *, void *);
+    sigset_t   sa_mask;
+    int        sa_flags;
+}; 
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-do-i-convert-a-signal-call-into-the-equivalent-sigaction-call" class="title-text">How do I convert a <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/signal" class="fancy-link">signal</a></code> call into the equivalent <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigaction" class="fancy-link">sigaction</a></code> call?<a class="anchor title-text" href="#how-do-i-convert-a-signal-call-into-the-equivalent-sigaction-call">#</a>
+</h2></div>
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Suppose you installed a signal handler for the alarm signal,</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-2" onclick="onCopy(this);">Copy</a><span class="n">signal</span><span class="p">(</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="n">myhandler</span><span class="p">);</span>
+<textarea id="code-copy-2" class="code-copy-textarea" value="signal(SIGALRM, myhandler);
+"></textarea></code></pre>
+<p>The equivalent <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigaction" class="fancy-link">sigaction</a></code> code is:</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-3" onclick="onCopy(this);">Copy</a><span class="k">struct</span> <span class="n">sigaction</span> <span class="n">sa</span><span class="p">;</span> 
+<span class="n">sa</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="n">myhandler</span><span class="p">;</span>
+<span class="n">sigemptyset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sa</span><span class="p">.</span><span class="n">sa_mask</span><span class="p">);</span>
+<span class="n">sa</span><span class="p">.</span><span class="n">sa_flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> 
+<span class="n">sigaction</span><span class="p">(</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">)</span>
+<textarea id="code-copy-3" class="code-copy-textarea" value="struct sigaction sa; 
+sa.sa_handler = myhandler;
+sigemptyset(&amp;amp;sa.sa_mask);
+sa.sa_flags = 0; 
+sigaction(SIGALRM, &amp;amp;sa, NULL)
+"></textarea></code></pre>
+<p>However, we typically may also set the mask and the flags field. The mask is a temporary signal mask used during the signal handler execution. The SA_RESTART flag will automatically restart some (but not all) system calls that otherwise would have returned early (with EINTR error). The latter means we can simplify the rest of code somewhat because a restart loop may no longer be required.</p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-4" onclick="onCopy(this);">Copy</a><span class="n">sigfillset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sa</span><span class="p">.</span><span class="n">sa_mask</span><span class="p">);</span>
+<span class="n">sa</span><span class="p">.</span><span class="n">sa_flags</span> <span class="o">=</span> <span class="n">SA_RESTART</span><span class="p">;</span> <span class="cm">/* Restart functions if  interrupted by handler */</span>     
+<textarea id="code-copy-4" class="code-copy-textarea" value="sigfillset(&amp;amp;sa.sa_mask);
+sa.sa_flags = SA_RESTART; /* Restart functions if  interrupted by handler */     
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+<div class="pad"><div class="card">
+<div class="title"><h2 id="how-do-i-use-sigwait" class="title-text">How do I use sigwait?<a class="anchor title-text" href="#how-do-i-use-sigwait">#</a>
+</h2></div>
+
+
+
+
+
+
+
+<div class="container-fluid"><div class="row"><div class="content col-sm-11 .col-sm-offset-1">
+<p>Sigwait can be used to read one pending signal at a time. <code class="highlighter-rouge"><a href="https://linux.die.net/man/3/sigwait" class="fancy-link">sigwait</a></code> is used to synchronously wait for signals, rather than handle them in a callback. A typical use of sigwait in a multi-threaded program is shown below. Notice that the thread signal mask is set first (and will be inherited by new threads). This prevents signals from being <em>delivered</em> so they will remain in a pending state until sigwait is called. Also notice the same set sigset_t variable is used by sigwait - except rather than setting the set of blocked signals it is being used as the set of signals that sigwait can catch and return.</p>
+<p>One advantage of writing a custom signal handling thread (such as the example below) rather than a callback function is that you can now use many more C library and system functions that otherwise could not be safely used in a signal handler because they are not async signal-safe.</p>
+<p>Based on <code class="highlighter-rouge">http://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_sigmask.html</code></p>
+<pre><code class="language-C"><a class="code-copy" rel="code-copy-5" onclick="onCopy(this);">Copy</a><span class="k">static</span> <span class="n">sigset_t</span>   <span class="n">signal_mask</span><span class="p">;</span>  <span class="cm">/* signals to block         */</span>
+
+<span class="kt">int</span> <span class="nf">main</span> <span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="n">pthread_t</span> <span class="n">sig_thr_id</span><span class="p">;</span>      <span class="cm">/* signal handler thread ID */</span>
+    <span class="n">sigemptyset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">signal_mask</span><span class="p">);</span>
+    <span class="n">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">signal_mask</span><span class="p">,</span> <span class="n">SIGINT</span><span class="p">);</span>
+    <span class="n">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">signal_mask</span><span class="p">,</span> <span class="n">SIGTERM</span><span class="p">);</span>
+    <span class="n">pthread_sigmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">signal_mask</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+    <span class="cm">/* New threads will inherit this thread's mask */</span>
+    <span class="n">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sig_thr_id</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">signal_thread</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+    <span class="cm">/* APPLICATION CODE */</span>
+    <span class="p">...</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="o">*</span><span class="nf">signal_thread</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span>       <span class="n">sig_caught</span><span class="p">;</span>    <span class="cm">/* signal caught       */</span>
+
+    <span class="cm">/* Use same mask as the set of signals that we'd like to know about! */</span>
+    <span class="n">sigwait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">signal_mask</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sig_caught</span><span class="p">);</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">sig_caught</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">SIGINT</span><span class="p">:</span>     <span class="cm">/* process SIGINT  */</span>
+        <span class="p">...</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">SIGTERM</span><span class="p">:</span>    <span class="cm">/* process SIGTERM */</span>
+        <span class="p">...</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="nl">default:</span>         <span class="cm">/* should normally not happen */</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"</span><span class="se">\n</span><span class="s">Unexpected signal %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">sig_caught</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<textarea id="code-copy-5" class="code-copy-textarea" value="static sigset_t   signal_mask;  /* signals to block         */
+
+int main (int argc, char *argv[]) {
+    pthread_t sig_thr_id;      /* signal handler thread ID */
+    sigemptyset(&amp;amp;signal_mask);
+    sigaddset(&amp;amp;signal_mask, SIGINT);
+    sigaddset(&amp;amp;signal_mask, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &amp;amp;signal_mask, NULL);
+
+    /* New threads will inherit this thread's mask */
+    pthread_create(&amp;amp;sig_thr_id, NULL, signal_thread, NULL);
+
+    /* APPLICATION CODE */
+    ...
+}
+
+void *signal_thread (void *arg) {
+    int       sig_caught;    /* signal caught       */
+
+    /* Use same mask as the set of signals that we'd like to know about! */
+    sigwait(&amp;amp;signal_mask, &amp;amp;sig_caught);
+    switch (sig_caught) {
+    case SIGINT:     /* process SIGINT  */
+        ...
+        break;
+    case SIGTERM:    /* process SIGTERM */
+        ...
+        break;
+    default:         /* should normally not happen */
+        fprintf(stderr, &quot;\nUnexpected signal %d\n&quot;, sig_caught);
+        break;
+    }
+}
+"></textarea></code></pre>
+</div></div></div>
+</div></div>
+</div>
+        
+        <div class="wrapper">
+</div>
+      </div>
+      <div class="col-md-2 col-sm-1 col-xs-0"></div>
+    </div>
+  </div>
+  <script>
+    var github_repo = "illinois-cs241/illinois-cs241.github.io";
+    var github_path = "_wikibook/signals-part-4-sigaction.md";
+  </script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" crossorigin="anonymous"></script>
+<script src="/js/main.js?v=2018-10-03 23:55:16 +0000"></script>
+
+<script>
+$(document).ready(function() { 
+    $("#tuxlink").prop("href", "javascript:;").click(function() { 
+        if ("WebkitAppearance" in document.documentElement.style) { 
+            var style = document.createElement("style"); 
+            style.setAttribute("id", "tuxstyle"); 
+            style.appendChild(document.createTextNode("")); 
+            document.head.appendChild(style); 
+            var sheet = style.sheet;
+            sheet.insertRule("::-webkit-scrollbar-thumb {border-radius: 0; background-color: white; -webkit-box-shadow: none;}", 0); 
+        } 
+
+        const hackerKey = 'hackerLocalKey';
+        const hackerOff = "off";
+        const hackerOn = "on";
+
+        if (window.localStorage.getItem(hackerKey) === null) {
+            window.localStorage.setItem(hackerKey, hackerOff);
+        }
+
+        $("#tuxlink").unbind('click').click(function() { 
+            const hackerClass = 'hacker';
+            $('html, body, header, nav, table, pre, span, :not(.card-staff) > a, p, h1, h2, h3, h4, h5, h6').toggleClass(hackerClass);
+            $('ul, img, pre').toggleClass(hackerClass);
+            $('.toc').toggleClass(hackerClass);
+            $('.content .highlighter-rouge').toggleClass(hackerClass);
+            $('.large-centered.columns').toggleClass(hackerClass);
+            $('.pad').toggleClass(hackerClass);
+            $('a').toggleClass(hackerClass);
+            $('tbody tr:nth-child(2n+1)').toggleClass(hackerClass);
+            $("#tuxlink img").toggleClass(hackerClass);
+
+            const val = window.localStorage.getItem(hackerKey);
+            if (val === hackerOff) {
+                window.localStorage.setItem(hackerKey, hackerOn);
+            } else {
+                window.localStorage.setItem(hackerKey, hackerOff);
+            }
+            return false; 
+        }); 
+        $("#tuxlink").click();
+        const stored = window.localStorage.getItem(hackerKey);
+        if (stored === hackerOn) {
+            console.log("Hello!")
+            $("#tuxlink").click();
+        } else {
+            console.log("Noo");
+        }
+
+        return false; 
+    }); 
+    } 
+    ); 
+    </script>
+
+<script src="/js/analytics.js"></script>
+
+<footer class="">
+
+<div class="container-fluid">
+<div class="shadow"></div>
+
+</div>
+
+</footer>
+
+</body>
+</html>
